@@ -1,0 +1,140 @@
+/* styles.css */
+body {
+  background-color: rebeccapurple;
+  margin: 0;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+}
+
+/* Header logo */
+header {
+  margin: 10px 0;
+}
+
+#logo {
+  max-width: 200px;
+  width: 50%;
+  height: auto;
+}
+
+/* Intro screen overlay */
+#intro-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Pirate scroll background */
+#scroll-bg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Intro content (input + button) */
+#intro-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+}
+
+/* Captain name label */
+#intro-content label {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+/* Player name input */
+#player-name {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: none;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+/* Start button */
+#start-btn {
+  width: 120px;
+  height: 50px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* Game screen boards */
+#game-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.player img {
+  width: 100px;
+  max-width: 30%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.gameboard {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  width: 90%;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  background-color: #222;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  #logo {
+    width: 70%;
+  }
+  #scroll-bg {
+    max-width: 300px;
+  }
+  #player-name {
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
+  #start-btn {
+    width: 100px;
+    height: 40px;
+  }
+}
