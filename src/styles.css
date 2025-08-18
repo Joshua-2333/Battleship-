@@ -1,6 +1,5 @@
 /* Global Styles */
 body {
-  background-color: #f4e1d2; /* Light parchment color */
   margin: 0;
   font-family: 'Georgia', serif;
   display: flex;
@@ -22,21 +21,20 @@ header {
 #logo {
   max-width: 250px;
   height: auto;
-  background: none;      
+  background: none;
   display: block;
-  cursor: pointer;       /* makes logo clickable */
-   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 #logo:hover {
-  transform: scale(1.1) rotate(-2deg);   /* pop + slight rotation */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); /* floating shadow */
+  transform: scale(1.1) rotate(-2deg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
 #game-title {
-  font-family: 'Georgia', serif;
   font-size: 3rem;
-  color: #3e2723; /* dark brown */
+  color: #3e2723;
   text-align: center;
   margin: 10px 0;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
@@ -61,7 +59,7 @@ header {
   height: auto;
   display: block;
   margin: 0 auto;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5); /* subtle depth */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
   border-radius: 10px;
 }
 
@@ -85,7 +83,7 @@ header {
   font-weight: bold;
   font-size: 1.5rem;
   margin-bottom: 15px;
-  color: #3e2723; 
+  color: #3e2723;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
   letter-spacing: 1px;
 }
@@ -100,7 +98,7 @@ header {
   max-width: 300px;
   margin-bottom: 30px;
   box-sizing: border-box;
-  background-color: transparent;  /* removed background */
+  background-color: transparent;   /* transparent */
   text-align: center;
   color: #3e2723;
   outline: none;
@@ -114,11 +112,11 @@ header {
 
 /* Start button */
 #start-btn {
-  width: 280px;                     
-  height: 120px;                    
+  width: 280px;
+  height: 120px;
   background-image: url('http://localhost:8080/assets/start_btn.png');
-  background-color: transparent;    
-  background-size: cover;           
+  background-color: transparent;
+  background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
   border: none;
@@ -174,17 +172,53 @@ header {
 /* Mobile adjustments */
 @media (max-width: 480px) {
   #logo {
-    width: 70%;
+    width: 60%;
+    position: relative;
+    left: 15%; /* shift logo more to the right */
+    transform: none; /* remove any hover transform for mobile */
   }
+
   #scroll-bg {
-    max-width: 350px;
+    max-width: 320px;
+    width: 90%;
+    height: auto;
+    max-height: none;
   }
+
+  #intro-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #intro-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-45%, -50%); /* keep content slightly right-centered */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    max-width: 240px;
+    text-align: center;
+    z-index: 2;
+  }
+
   #player-name {
-    font-size: 1rem;
-    padding: 6px;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    max-width: 200px;
+    margin-bottom: 12px;
   }
+
   #start-btn {
-    width: 200px;
-    height: 90px;
+    width: 120px;
+    height: 50px;
+    margin-top: 5px;
+    background-size: contain;
   }
 }
