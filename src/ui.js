@@ -1,7 +1,42 @@
 // ui.js
-// Handles DOM rendering, hover previews, and UI updates
+// Handles DOM rendering, hover previews, UI updates, and floating ship preview
 
-// Render a 10x10 grid
+let shipPreviewLabel = null;
+
+// --- Floating Ship Preview Functions ---
+export function createShipPreviewLabel() {
+  if (!shipPreviewLabel) {
+    shipPreviewLabel = document.createElement('div');
+    shipPreviewLabel.style.position = 'absolute';
+    shipPreviewLabel.style.padding = '5px 10px';
+    shipPreviewLabel.style.backgroundColor = 'rgba(50,205,50,0.9)';
+    shipPreviewLabel.style.color = '#fff';
+    shipPreviewLabel.style.fontWeight = 'bold';
+    shipPreviewLabel.style.borderRadius = '5px';
+    shipPreviewLabel.style.pointerEvents = 'none';
+    shipPreviewLabel.style.zIndex = 20;
+    shipPreviewLabel.style.transition = 'transform 0.1s ease';
+    shipPreviewLabel.style.display = 'none';
+    document.body.appendChild(shipPreviewLabel);
+  }
+}
+
+export function updateShipPreviewLabel(x, y, length, orientation) {
+  if (!shipPreviewLabel) return;
+  shipPreviewLabel.textContent = `Ship: ${length} (${orientation})`;
+  shipPreviewLabel.style.left = `${x + 15}px`;
+  shipPreviewLabel.style.top = `${y + 15}px`;
+}
+
+export function showShipPreviewLabel() {
+  if (shipPreviewLabel) shipPreviewLabel.style.display = 'block';
+}
+
+export function hideShipPreviewLabel() {
+  if (shipPreviewLabel) shipPreviewLabel.style.display = 'none';
+}
+
+// --- Grid Rendering Functions ---
 export function renderGrid(container, board, showShips = false) {
   container.innerHTML = '';
   for (let y = 0; y < board.length; y++) {
@@ -15,12 +50,12 @@ export function renderGrid(container, board, showShips = false) {
       cell.style.border = '1px solid #000';
       cell.style.display = 'inline-block';
       cell.style.boxSizing = 'border-box';
-      cell.style.backgroundColor = '#87CEFA'; // water
+      cell.style.backgroundColor = '#87CEFA';
       cell.style.transition = 'all 0.3s ease';
 
       const boardCell = board[y][x];
       if (showShips && boardCell && boardCell.ship) {
-        cell.style.backgroundColor = '#808080'; // ship gray
+        cell.style.backgroundColor = '#808080';
       }
 
       container.appendChild(cell);
@@ -50,28 +85,42 @@ export function updateCell(container, x, y, result) {
   }
 }
 
-export function highlightPreview(container, board, x, y, length, orientation) {
+// --- Ship Placement Preview Functions ---
+export function highlightPreview(container, board, x, y, length, orientation, shipName = '', clientX = 0, clientY = 0) {
   container.querySelectorAll('.cell').forEach(c => {
     const cx = parseInt(c.dataset.x, 10);
     const cy = parseInt(c.dataset.y, 10);
     const boardCell = board[cy][cx];
     c.style.backgroundColor = boardCell && boardCell.ship ? '#808080' : '#87CEFA';
+    c.classList.remove('valid-preview', 'invalid-preview');
   });
+
+  let valid = true;
 
   for (let i = 0; i < length; i++) {
     const hx = orientation === 'horizontal' ? x + i : x;
     const hy = orientation === 'horizontal' ? y : y + i;
-    if (hx >= board.length || hy >= board.length) break;
+    if (hx >= board[0].length || hy >= board.length) {
+      valid = false;
+      break;
+    }
 
     const cell = container.querySelector(`div[data-x='${hx}'][data-y='${hy}']`);
     if (!cell) continue;
 
     const boardCell = board[hy][hx];
     if (!boardCell) {
-      cell.style.backgroundColor = '#32CD32'; // green valid
+      cell.classList.add('valid-preview');
     } else {
-      cell.style.backgroundColor = '#FF6347'; // red invalid
+      cell.classList.add('invalid-preview');
+      valid = false;
     }
+  }
+
+  if (shipName) {
+    showShipPreviewLabel();
+    updateShipPreviewLabel(clientX, clientY, length, orientation);
+    shipPreviewLabel.textContent = valid ? shipName : `${shipName} (Invalid)`;
   }
 }
 
@@ -85,9 +134,12 @@ export function clearPreview(container, board) {
     } else {
       c.style.backgroundColor = '#87CEFA';
     }
+    c.classList.remove('valid-preview', 'invalid-preview');
   });
+  hideShipPreviewLabel();
 }
 
+// --- Message & Screen Functions ---
 export function showMessage(message, duration = 1500) {
   let msgDiv = document.getElementById('message');
   if (!msgDiv) {
@@ -118,11 +170,18 @@ export function showMessage(message, duration = 1500) {
 export function toggleScreen(showIntro) {
   const introScreen = document.getElementById('intro-screen');
   const gameScreen = document.getElementById('game-screen');
+  const msgDiv = document.getElementById('message');
+
   if (showIntro) {
     introScreen.classList.remove('hidden');
     gameScreen.classList.add('hidden');
   } else {
     introScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
+  }
+
+  // Clear floating messages when switching screens
+  if (msgDiv) {
+    msgDiv.style.display = 'none';
   }
 }

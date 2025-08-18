@@ -12,7 +12,7 @@ import battleSong from './sfx/battleSong.mp3';
 import hitSoundFile from './sfx/hitSound.mp3';
 import missSoundFile from './sfx/missSound.mp3';
 
-// DOM Elements
+// DOM references
 const logo = document.getElementById('logo');
 const scrollBg = document.getElementById('scroll-bg');
 const startBtn = document.getElementById('start-btn');
@@ -24,6 +24,10 @@ const gameScreen = document.getElementById('game-screen');
 const playerGridContainer = document.getElementById('player-grid');
 const enemyGridContainer = document.getElementById('enemy-grid');
 const battleMusic = document.getElementById('battle-music');
+const orientationBtn = document.getElementById('orientation-btn');
+const confirmBtn = document.getElementById('confirm-btn');
+const resetBtn = document.getElementById('reset-btn');
+const controls = document.getElementById('controls');
 
 // Attach images
 logo.src = logoImg;
@@ -31,10 +35,10 @@ scrollBg.src = scrollBgImg;
 player1ImgEl.src = player1Img;
 player2ImgEl.src = player2Img;
 
-// Set start button image only
+// Style start button
 startBtn.style.backgroundImage = `url(${startBtnImg})`;
 startBtn.setAttribute('aria-label', 'Start Game');
-startBtn.disabled = true;
+startBtn.disabled = true; // enabled once name is entered
 
 // Audio setup
 battleMusic.src = battleSong;
@@ -54,5 +58,9 @@ export {
   enemyGridContainer,
   battleMusic,
   hitSound,
-  missSound
+  missSound,
+  orientationBtn,
+  confirmBtn,
+  resetBtn,
+  controls
 };

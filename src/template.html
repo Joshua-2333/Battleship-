@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Battleship</title>
 </head>
 <body>
@@ -24,7 +25,7 @@
       <label for="player-name" class="intro-label">CAPTAIN NAME:</label>
       <input type="text" id="player-name" placeholder="ENTER NAME">
 
-      <!-- Start Game Button -->
+      <!-- Start Game Button (image) -->
       <button id="start-btn" aria-label="Start Game"></button>
     </div>
   </div>
@@ -41,6 +42,17 @@
         <div id="enemy-grid" class="gameboard"></div>
       </div>
     </div>
+
+    <!-- Orientation button (hidden initially) -->
+    <button id="orientation-btn" class="hidden">Orientation: Horizontal</button>
+
+    <!-- Ship placement controls -->
+    <div id="controls" class="hidden">
+      <button id="confirm-btn" disabled>Confirm Placements</button>
+      <button id="reset-btn">Reset Placements</button>
+    </div>
+
+    <!-- Battle music -->
     <audio id="battle-music" loop></audio>
   </div>
 

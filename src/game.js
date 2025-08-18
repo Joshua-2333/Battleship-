@@ -4,7 +4,16 @@ import createGameboard from './gameboard';
 export function createGame() {
   const playerBoard = createGameboard();
   const enemyBoard = createGameboard();
-  const shipLengths = [5, 4, 3, 3, 2];
+
+  // Ship lengths and corresponding names
+  const shipsInfo = [
+    { length: 5, name: 'Carrier' },
+    { length: 4, name: 'Battleship' },
+    { length: 3, name: 'Cruiser' },
+    { length: 3, name: 'Submarine' },
+    { length: 2, name: 'Destroyer' }
+  ];
+
   let currentShipIndex = 0;
   let orientation = 'horizontal';
   let gameStarted = false;
@@ -15,28 +24,28 @@ export function createGame() {
     return orientation;
   }
 
-  // Place player ship
+  // Place player ship with name
   function placePlayerShip(x, y) {
-    if (currentShipIndex >= shipLengths.length) return false;
+    if (currentShipIndex >= shipsInfo.length) return false;
 
-    const length = shipLengths[currentShipIndex];
+    const { length, name } = shipsInfo[currentShipIndex];
     if (!playerBoard.isValidPlacement(length, x, y, orientation)) return false;
 
-    playerBoard.placeShip(length, x, y, orientation);
+    playerBoard.placeShip(length, x, y, orientation, name);
     currentShipIndex++;
     return true;
   }
 
-  // Automatically place enemy ships
+  // Automatically place enemy ships with names
   function placeEnemyShipsRandomly() {
-    for (const length of shipLengths) {
+    for (const { length, name } of shipsInfo) {
       let placed = false;
       while (!placed) {
         const dir = Math.random() < 0.5 ? 'horizontal' : 'vertical';
         const x = Math.floor(Math.random() * enemyBoard.size);
         const y = Math.floor(Math.random() * enemyBoard.size);
         if (enemyBoard.isValidPlacement(length, x, y, dir)) {
-          enemyBoard.placeShip(length, x, y, dir);
+          enemyBoard.placeShip(length, x, y, dir, name);
           placed = true;
         }
       }
@@ -45,10 +54,13 @@ export function createGame() {
 
   // Player attacks enemy
   function attackEnemy(x, y) {
+    const cell = enemyBoard.getCell(x, y);
     const result = enemyBoard.receiveAttack(x, y);
-    if (result !== 'already attacked' && !enemyBoard.allShipsSunk()) {
-      setTimeout(computerAttack, 500); // Enemy attacks after 0.5s
+
+    if (result.result === 'hit' && cell && cell.ship) {
+      return { result: 'hit', shipName: cell.ship.name };
     }
+
     return result;
   }
 
@@ -81,7 +93,7 @@ export function createGame() {
   return {
     playerBoard,
     enemyBoard,
-    shipLengths,
+    shipsInfo,
     currentShipIndex,
     orientation,
     gameStarted,

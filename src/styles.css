@@ -1,4 +1,4 @@
-/* Global Styles */
+/* --- Global Styles --- */
 body {
   margin: 0;
   font-family: 'Georgia', serif;
@@ -13,7 +13,7 @@ body {
   background-position: center;
 }
 
-/* Header */
+/* --- Header --- */
 header {
   margin: 20px 0;
   text-align: center;
@@ -41,7 +41,7 @@ header {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-/* Intro Screen */
+/* --- Intro Screen --- */
 #intro-screen {
   position: relative;
   display: flex;
@@ -79,7 +79,6 @@ header {
   z-index: 2;
 }
 
-/* Captain name label */
 .intro-label {
   font-weight: bold;
   font-size: 1.5rem;
@@ -89,7 +88,6 @@ header {
   letter-spacing: 1px;
 }
 
-/* Player name input */
 #player-name {
   padding: 10px 15px;
   font-size: 1.2rem;
@@ -99,7 +97,7 @@ header {
   max-width: 300px;
   margin-bottom: 30px;
   box-sizing: border-box;
-  background-color: transparent;   /* transparent */
+  background-color: transparent;
   text-align: center;
   color: #3e2723;
   outline: none;
@@ -111,13 +109,12 @@ header {
   box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
-/* Start button */
 #start-btn {
   width: 280px;
   height: 120px;
   background-image: url('http://localhost:8080/assets/start_btn.png');
   background-color: transparent;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   border: none;
@@ -132,7 +129,25 @@ header {
   transform: scale(1.05);
 }
 
-/* Game Screen */
+/* Orientation button */
+#orientation-btn {
+  display: none; /* hidden initially */
+  margin: 10px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #8b4513;
+  color: white;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+#orientation-btn:hover {
+  background-color: #5d2e0d;
+}
+
+/* --- Game Screen --- */
 #game-screen {
   display: flex;
   flex-direction: column;
@@ -166,24 +181,97 @@ header {
   box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
 }
 
+.cell {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  background-color: #87CEFA;
+  transition: all 0.3s ease;
+}
+
+/* Hover preview colors */
+.cell.valid-preview {
+  background-color: #32CD32 !important;
+  animation: pulse-green 0.5s infinite alternate;
+}
+
+.cell.invalid-preview {
+  background-color: #FF6347 !important;
+  animation: pulse-red 0.5s infinite alternate;
+}
+
+/* Hit/miss animations */
+.cell.hit {
+  background-color: red !important;
+  transform: scale(1.1) rotate(-5deg);
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+.cell.miss {
+  background-color: white !important;
+  opacity: 0.7;
+  transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+/* Floating ship preview label */
+#ship-preview-label {
+  position: absolute;
+  padding: 5px 10px;
+  background-color: rgba(50,205,50,0.9);
+  color: #fff;
+  font-weight: bold;
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 20;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+  display: none;
+  white-space: nowrap;
+}
+
+/* Message popup */
+#message {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background-color: rgba(0,0,0,0.7);
+  color: white;
+  border-radius: 5px;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+/* Hidden class */
 .hidden {
   display: none !important;
 }
 
-/* Mobile adjustments */
+/* --- Animations --- */
+@keyframes pulse-green {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}
+
+/* --- Mobile adjustments --- */
 @media (max-width: 480px) {
   #logo {
     width: 60%;
     position: relative;
-    left: 15%; /* shift logo more to the right */
-    transform: none; /* remove any hover transform for mobile */
+    left: 15%;
+    transform: none;
   }
 
   #scroll-bg {
     max-width: 320px;
     width: 90%;
     height: auto;
-    max-height: none;
   }
 
   #intro-screen {
@@ -199,7 +287,7 @@ header {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-45%, -50%); /* keep content slightly right-centered */
+    transform: translate(-45%, -50%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -221,5 +309,11 @@ header {
     height: 50px;
     margin-top: 5px;
     background-size: contain;
+  }
+
+  /* Floating label scaling on mobile */
+  #ship-preview-label {
+    font-size: 0.8rem;
+    padding: 4px 8px;
   }
 }
