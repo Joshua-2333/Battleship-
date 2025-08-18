@@ -7,8 +7,9 @@ body {
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
-  background-image: url('http://localhost:8080/assets/wood_texture.jpg');
+  background-image: url('./images/wood_texture.jpg');
   background-size: cover;
+  background-repeat: no-repeat;
   background-position: center;
 }
 

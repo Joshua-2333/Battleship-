@@ -1,20 +1,27 @@
+// gameboard.js
 import createShip from './ship';
 
 function createGameboard(size = 10) {
-  const board = Array(size).fill(null).map(() => Array(size).fill(null));
+  const board = Array.from({ length: size }, () => Array(size).fill(null));
   const ships = [];
 
+  // Check if a ship placement is valid
   function isValidPlacement(length, x, y, direction) {
     if (direction === 'horizontal') {
       if (x + length > size) return false;
-      for (let i = 0; i < length; i++) if (board[y][x + i] !== null) return false;
+      for (let i = 0; i < length; i++) {
+        if (board[y][x + i] !== null) return false;
+      }
     } else {
       if (y + length > size) return false;
-      for (let i = 0; i < length; i++) if (board[y + i][x] !== null) return false;
+      for (let i = 0; i < length; i++) {
+        if (board[y + i][x] !== null) return false;
+      }
     }
     return true;
   }
 
+  // Place a ship on the board
   function placeShip(length, x, y, direction = 'horizontal') {
     if (!isValidPlacement(length, x, y, direction)) throw new Error('Invalid placement');
     const ship = createShip(length);
@@ -22,7 +29,7 @@ function createGameboard(size = 10) {
 
     for (let i = 0; i < length; i++) {
       const pos = direction === 'horizontal' ? [x + i, y] : [x, y + i];
-      board[pos[1]][pos[0]] = { ship, index: i };
+      board[pos[1]][pos[0]] = { type: 'ship', ship, index: i };
       positions.push(pos);
     }
 
@@ -30,32 +37,60 @@ function createGameboard(size = 10) {
     return ship;
   }
 
+  // Receive an attack at x,y
   function receiveAttack(x, y) {
+    if (x < 0 || x >= size || y < 0 || y >= size) return 'invalid';
+
     const cell = board[y][x];
-    if (cell === 'miss' || (cell && cell.ship && cell.ship.hits[cell.index])) {
+
+    if (!cell) {
+      board[y][x] = { type: 'miss' };
+      return 'miss';
+    }
+
+    if (cell.type === 'miss' || (cell.type === 'ship' && cell.ship.hits[cell.index])) {
       return 'already attacked';
     }
-    if (cell === null) {
-      board[y][x] = 'miss';
-      return 'miss';
-    } else {
-      const { ship, index } = cell;
-      ship.hit(index);
+
+    if (cell.type === 'ship') {
+      cell.ship.hit(cell.index);
       return 'hit';
     }
+
+    return 'error';
   }
 
+  // Check if all ships are sunk
   function allShipsSunk() {
     return ships.every(entry => entry.ship.isSunk());
+  }
+
+  // Get cell info for UI
+  function getCell(x, y) {
+    if (x < 0 || x >= size || y < 0 || y >= size) return null;
+    return board[y][x];
+  }
+
+  // Reset the board
+  function resetBoard() {
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        board[y][x] = null;
+      }
+    }
+    ships.length = 0;
   }
 
   return {
     board,
     ships,
+    size,
     placeShip,
     receiveAttack,
     allShipsSunk,
     isValidPlacement,
+    getCell,
+    resetBoard,
   };
 }
 
