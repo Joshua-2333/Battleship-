@@ -17,44 +17,52 @@
 
   <!-- Introduction Overlay -->
   <div id="intro-screen">
-    <!-- Pirate Scroll Background -->
     <img id="scroll-bg" src="./images/placeholder.png" alt="Pirate Scroll">
-
-    <!-- Overlay content on top of scroll -->
     <div id="intro-content">
       <label for="player-name" class="intro-label">CAPTAIN NAME:</label>
       <input type="text" id="player-name" placeholder="ENTER NAME">
-
-      <!-- Start Game Button (image) -->
       <button id="start-btn" aria-label="Start Game"></button>
     </div>
   </div>
 
-  <!-- Game Screen -->
+  <!-- Game Screen Wrapper -->
   <div id="game-screen" class="hidden">
-    <div id="players">
+    <!-- Setup Screen: Player places ships -->
+    <div id="setup-screen">
+      <h2>Place Your Ships</h2>
       <div class="player">
         <img id="player1-img" src="./images/placeholder.png" alt="Player 1">
         <div id="player-grid" class="gameboard"></div>
       </div>
-      <div class="player">
-        <img id="player2-img" src="./images/placeholder.png" alt="Player 2">
-        <div id="enemy-grid" class="gameboard"></div>
+    </div>
+
+    <!-- Battle Screen: Both boards visible -->
+    <div id="battle-screen" class="hidden">
+      <h2>Battle!</h2>
+      <div id="players">
+        <div class="player">
+          <h3>Your Board</h3>
+          <img id="player1-img-battle" src="./images/placeholder.png" alt="Player 1">
+          <div id="player-grid-battle" class="gameboard"></div>
+        </div>
+        <div class="player">
+          <h3>Enemy Board</h3>
+          <img id="player2-img" src="./images/placeholder.png" alt="Enemy">
+          <div id="enemy-grid" class="gameboard"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Orientation button (hidden initially) -->
-    <button id="orientation-btn" class="hidden">Orientation: Horizontal</button>
-
-    <!-- Ship placement controls -->
-    <div id="controls" class="hidden">
-      <button id="confirm-btn" disabled>Confirm Placements</button>
-      <button id="reset-btn">Reset Placements</button>
+    <!-- Controls -->
+    <div id="controls">
+      <button id="orientation-btn">Orientation: Horizontal</button>
+      <button id="confirm-btn" disabled>Confirm Placement</button>
+      <button id="reset-btn">Reset Placement</button>
     </div>
-
-    <!-- Battle music -->
-    <audio id="battle-music" loop></audio>
   </div>
+
+  <!-- Battle music -->
+  <audio id="battle-music" loop></audio>
 
   <!-- Hit/Miss sounds -->
   <audio id="hit-sound"></audio>

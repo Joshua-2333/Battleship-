@@ -1,32 +1,38 @@
 // index.js
 import './styles.css';
 import { createGame } from './game';
-import { renderGrid, highlightPreview, clearPreview, showMessage, toggleScreen, updateCell } from './ui';
+import { 
+  renderGrid, highlightPreview, clearPreview, showMessage, 
+  toggleScreen, updateCell, hideShipPreviewLabel, createShipPreviewLabel 
+} from './ui';
 import { 
   logo, startBtn, playerNameInput, 
-  playerGridContainer, enemyGridContainer, 
+  playerGridContainer, battlePlayerGridContainer, enemyGridContainer, 
   battleMusic, hitSound, missSound,
   orientationBtn, confirmBtn, resetBtn, controls
 } from './dom';
 
+// --- Initialize game and UI ---
 const game = createGame();
+createShipPreviewLabel(); // initialize floating ship preview
 
-// Initial render (empty grids)
+// --- Render initial grids ---
 renderGrid(playerGridContainer, game.playerBoard.board, true);
+renderGrid(battlePlayerGridContainer, game.playerBoard.board, true);
 renderGrid(enemyGridContainer, game.enemyBoard.board, false);
 
-// ------------------ INPUT WATCHER ------------------ //
+// --- Enable Start button only when player name is entered ---
 playerNameInput.addEventListener('input', () => {
   startBtn.disabled = playerNameInput.value.trim().length === 0;
 });
 
-// ------------------ ORIENTATION ------------------ //
+// --- Orientation toggle ---
 orientationBtn.addEventListener('click', () => {
   const newOrientation = game.toggleOrientation();
   orientationBtn.textContent = `Orientation: ${newOrientation.charAt(0).toUpperCase() + newOrientation.slice(1)}`;
 });
 
-// ------------------ PREVIEW HELPERS ------------------ //
+// --- Helper to get coords from mouse/touch events ---
 function getCoordsFromEvent(e) {
   if (e.touches && e.touches.length > 0) {
     const touch = e.touches[0];
@@ -40,17 +46,17 @@ function getCoordsFromEvent(e) {
   }
 }
 
+// --- Ship preview ---
 function handlePreview(e) {
   const coords = getCoordsFromEvent(e);
   if (!coords) return;
 
-  // Ensure playerBoard and shipLengths exist
-  if (!game.playerBoard?.board || !Array.isArray(game.shipLengths)) return;
+  const shipsInfo = game.shipsInfo;
+  if (!shipsInfo || game.currentShipIndex >= shipsInfo.length) return;
 
-  // Only preview if still placing ships
-  if (game.currentShipIndex >= game.shipLengths.length) return;
+  const length = shipsInfo[game.currentShipIndex].length;
+  const name = shipsInfo[game.currentShipIndex].name;
 
-  const length = game.shipLengths[game.currentShipIndex];
   highlightPreview(
     playerGridContainer,
     game.playerBoard.board,
@@ -58,32 +64,49 @@ function handlePreview(e) {
     coords.y,
     length,
     game.orientation,
-    `Ship ${game.currentShipIndex + 1}`,
+    name,
     coords.clientX,
     coords.clientY
   );
 }
 
-// ------------------ SHIP PLACEMENT ------------------ //
+// --- Place ship ---
 function placeShipHandler(e) {
   const coords = getCoordsFromEvent(e);
   if (!coords) return;
 
-  if (!game.placePlayerShip(coords.x, coords.y)) {
+  const placed = game.placePlayerShip(coords.x, coords.y);
+  if (!placed) {
     showMessage('Invalid placement!');
     return;
   }
 
   renderGrid(playerGridContainer, game.playerBoard.board, true);
 
-  if (game.currentShipIndex === game.shipLengths.length) {
+  if (game.currentShipIndex === game.shipsInfo.length) {
     confirmBtn.disabled = false;
     showMessage('All ships placed! Confirm to start the battle!');
   }
 }
 
-// ------------------ ENEMY ATTACKS ------------------ //
-enemyGridContainer.addEventListener('click', (e) => {
+// --- Enable / disable placement listeners ---
+function enablePlacementListeners() {
+  playerGridContainer.addEventListener('mousemove', handlePreview);
+  playerGridContainer.addEventListener('touchmove', handlePreview, { passive: false });
+  playerGridContainer.addEventListener('click', placeShipHandler);
+  playerGridContainer.addEventListener('touchend', placeShipHandler);
+}
+
+function disablePlacementListeners() {
+  playerGridContainer.removeEventListener('mousemove', handlePreview);
+  playerGridContainer.removeEventListener('touchmove', handlePreview);
+  playerGridContainer.removeEventListener('click', placeShipHandler);
+  playerGridContainer.removeEventListener('touchend', placeShipHandler);
+  hideShipPreviewLabel();
+}
+
+// --- Enemy attack ---
+function handleEnemyClick(e) {
   if (!game.isConfirmed) {
     showMessage('Confirm your placements first!');
     return;
@@ -98,19 +121,20 @@ enemyGridContainer.addEventListener('click', (e) => {
   const result = game.attackEnemy(x, y);
   const boardCell = game.enemyBoard.getCell(x, y);
 
+  // Update grids
   renderGrid(enemyGridContainer, game.enemyBoard.board, false);
-  renderGrid(playerGridContainer, game.playerBoard.board, true);
+  renderGrid(battlePlayerGridContainer, game.playerBoard.board, true);
 
   if (result.result === 'hit') {
     hitSound.currentTime = 0;
     hitSound.play();
-    showMessage(boardCell?.ship ? `Hit! ${boardCell.ship.name}` : 'Hit!');
     updateCell(enemyGridContainer, x, y, 'hit');
+    showMessage(boardCell?.ship ? `Hit! ${boardCell.ship.name}` : 'Hit!');
   } else if (result.result === 'miss') {
     missSound.currentTime = 0;
     missSound.play();
-    showMessage('Miss!');
     updateCell(enemyGridContainer, x, y, 'miss');
+    showMessage('Miss!');
   }
 
   if (game.enemyBoard.allShipsSunk()) {
@@ -118,10 +142,10 @@ enemyGridContainer.addEventListener('click', (e) => {
   } else if (game.playerBoard.allShipsSunk()) {
     showMessage('You lost! Your fleet has been destroyed! ☠️', 3000);
   }
-});
+}
 
-// ------------------ SCREEN FLOW ------------------ //
-// Start button → placement screen
+// --- Screen flow ---
+// Start button → setup screen
 startBtn.addEventListener('click', () => {
   const playerName = playerNameInput.value.trim();
   if (!playerName) {
@@ -129,64 +153,74 @@ startBtn.addEventListener('click', () => {
     return;
   }
 
-  toggleScreen(false);
-  battleMusic.play().catch(err => console.log('Autoplay blocked:', err));
+  toggleScreen('setup');
 
-  // Reset placement state
   game.resetGame();
   game.currentShipIndex = 0;
   game.isConfirmed = false;
 
   renderGrid(playerGridContainer, game.playerBoard.board, true);
-  renderGrid(enemyGridContainer, game.enemyBoard.board, false);
 
   orientationBtn.classList.remove('hidden');
   controls.classList.remove('hidden');
   confirmBtn.disabled = true;
 
-  // Enable preview & placement
-  playerGridContainer.addEventListener('mousemove', handlePreview);
-  playerGridContainer.addEventListener('touchmove', handlePreview, { passive: false });
-  playerGridContainer.addEventListener('click', placeShipHandler);
-  playerGridContainer.addEventListener('touchend', placeShipHandler);
+  enablePlacementListeners();
 
   showMessage(`Welcome Captain ${playerName}, place your ships!`);
 });
 
-// Confirm placements → start game
+// Confirm placements → battle screen
 confirmBtn.addEventListener('click', () => {
-  if (!Array.isArray(game.shipLengths) || game.currentShipIndex < game.shipLengths.length) {
+  if (game.currentShipIndex < game.shipsInfo.length) {
     showMessage('You must place all ships first!');
     return;
   }
 
   game.startGame();
   game.isConfirmed = true;
-  confirmBtn.disabled = true;
+
+  toggleScreen('battle');
+
+  renderGrid(battlePlayerGridContainer, game.playerBoard.board, true);
+  renderGrid(enemyGridContainer, game.enemyBoard.board, false);
+
   orientationBtn.classList.add('hidden');
+  confirmBtn.disabled = true;
+
+  disablePlacementListeners();
+
   showMessage('Battle started! Attack the enemy!');
+
+  enemyGridContainer.addEventListener('click', handleEnemyClick);
 });
 
-// Reset placements → back to empty player board
+// Reset placements → empty player board
 resetBtn.addEventListener('click', () => {
   game.resetGame();
   game.currentShipIndex = 0;
   game.isConfirmed = false;
+
   renderGrid(playerGridContainer, game.playerBoard.board, true);
-  renderGrid(enemyGridContainer, game.enemyBoard.board, false);
   confirmBtn.disabled = true;
+
+  enablePlacementListeners();
   showMessage('Placements cleared. Place your ships again!');
 });
 
-// Logo resets everything
+// Logo → reset everything
 logo.addEventListener('click', () => {
-  toggleScreen(true);
+  toggleScreen('intro');
+
   battleMusic.pause();
   battleMusic.currentTime = 0;
   playerNameInput.value = '';
   orientationBtn.classList.add('hidden');
   controls.classList.add('hidden');
+
   game.resetGame();
   renderGrid(playerGridContainer, game.playerBoard.board, true);
   renderGrid(enemyGridContainer, game.enemyBoard.board, false);
+
+  disablePlacementListeners();
 });
