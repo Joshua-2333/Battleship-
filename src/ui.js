@@ -1,15 +1,17 @@
 // ui.js
-// Handles DOM rendering, hover previews, UI updates, and drag-and-drop ship placement
+// Handles DOM rendering, ship previews, UI updates, drag/click-to-place, and messages
 
 let shipPreviewLabel = null;
-let currentOrientation = 'horizontal'; // default orientation
-let draggedShip = null; // Ship being dragged
-let dragOffset = { x: 0, y: 0 }; // offset for touch/mouse dragging
+let currentOrientation = 'horizontal';
+let pickedShipName = null;
+let pickedShipLength = 0;
+let ghostShipCells = [];
 
-// --- Orientation Functions ---
+// --- Orientation ---
 export function toggleOrientation(buttonEl) {
   currentOrientation = currentOrientation === 'horizontal' ? 'vertical' : 'horizontal';
   if (buttonEl) buttonEl.textContent = `Rotate Ship: ${capitalize(currentOrientation)}`;
+  showMessage(`Orientation: ${capitalize(currentOrientation)}`, 1000);
   return currentOrientation;
 }
 
@@ -17,7 +19,7 @@ export function getOrientation() {
   return currentOrientation;
 }
 
-// --- Floating Ship Preview ---
+// --- Ship Preview Label ---
 export function createShipPreviewLabel() {
   if (!shipPreviewLabel) {
     shipPreviewLabel = document.createElement('div');
@@ -31,18 +33,17 @@ export function createShipPreviewLabel() {
       borderRadius: '5px',
       pointerEvents: 'none',
       zIndex: 20,
-      transition: 'transform 0.1s ease, opacity 0.2s ease',
       display: 'none',
     });
     document.body.appendChild(shipPreviewLabel);
   }
 }
 
-export function updateShipPreviewLabel(x, y, length, orientation, shipName = '') {
+export function updateShipPreviewLabel(x, y, length, orientation, shipName = '', valid = true) {
   if (!shipPreviewLabel) return;
-  shipPreviewLabel.textContent = shipName || `Ship: ${length} (${orientation})`;
-  shipPreviewLabel.style.left = `${x + 15}px`;
-  shipPreviewLabel.style.top = `${y + 15}px`;
+  shipPreviewLabel.textContent = valid ? shipName || `Ship: ${length}` : `${shipName} (Invalid)`;
+  shipPreviewLabel.style.left = `${x}px`;
+  shipPreviewLabel.style.top = `${y}px`;
 }
 
 export function showShipPreviewLabel() {
@@ -53,29 +54,54 @@ export function hideShipPreviewLabel() {
   if (shipPreviewLabel) shipPreviewLabel.style.display = 'none';
 }
 
-// --- Grid Rendering Functions ---
-export function renderGrid(container, board, showShips = false) {
+// --- Grid Rendering ---
+export function renderGrid(container, board) {
   if (!container || !board) return;
   container.innerHTML = '';
-  const cellSize = 50;
+  const gridSize = container.clientWidth / 10;
+  container.style.position = 'relative';
+
   for (let y = 0; y < board.length; y++) {
     for (let x = 0; x < board[y].length; x++) {
       const cell = document.createElement('div');
       cell.classList.add('cell');
-      cell.style.width = `${cellSize}px`;
-      cell.style.height = `${cellSize}px`;
       cell.dataset.x = x;
       cell.dataset.y = y;
+      Object.assign(cell.style, {
+        width: `${gridSize}px`,
+        height: `${gridSize}px`,
+        boxSizing: 'border-box',
+        border: '1px solid rgba(0,0,0,0.1)',
+        backgroundColor: 'transparent',
+      });
       container.appendChild(cell);
-
-      const boardCell = board[y][x];
-      if (showShips && boardCell && boardCell.ship) {
-        cell.style.backgroundColor = '#808080';
-      }
     }
   }
+
+  // Render placed ships
+  board.forEach((row, y) => {
+    row.forEach((cellData, x) => {
+      if (cellData?.ship && cellData.ship.placed) {
+        const ship = cellData.ship;
+        const shipDiv = document.createElement('div');
+        shipDiv.classList.add('placed-ship');
+        shipDiv.style.width = ship.orientation === 'horizontal'
+          ? `${gridSize * ship.length}px`
+          : `${gridSize}px`;
+        shipDiv.style.height = ship.orientation === 'horizontal'
+          ? `${gridSize}px`
+          : `${gridSize * ship.length}px`;
+        shipDiv.style.top = `${gridSize * ship.startY}px`;
+        shipDiv.style.left = `${gridSize * ship.startX}px`;
+        shipDiv.style.transform = `rotate(0deg)`;
+        shipDiv.title = ship.name;
+        container.appendChild(shipDiv);
+      }
+    });
+  });
 }
 
+// --- Update individual cell (hit/miss) ---
 export function updateCell(container, x, y, result) {
   if (!container) return;
   const cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
@@ -92,19 +118,30 @@ export function updateCell(container, x, y, result) {
   }
 }
 
-// --- Ship Placement Preview ---
-export function highlightPreview(container, board, x, y, length, orientation, shipName = '', clientX = 0, clientY = 0) {
-  if (!container || !board) return;
+// --- Snap coordinates to grid ---
+function getGridCoords(clientX, clientY, container, length, orientation) {
+  const rect = container.getBoundingClientRect();
+  const gridSize = rect.width / 10;
 
-  container.querySelectorAll('.cell').forEach(c => {
-    const cx = parseInt(c.dataset.x, 10);
-    const cy = parseInt(c.dataset.y, 10);
-    const boardCell = board[cy][cx];
-    c.style.backgroundColor = boardCell && boardCell.ship ? '#808080' : 'transparent';
-    c.classList.remove('valid-preview', 'invalid-preview');
-  });
+  let x = Math.floor((clientX - rect.left) / gridSize);
+  let y = Math.floor((clientY - rect.top) / gridSize);
 
+  if (orientation === 'horizontal') {
+    x = Math.min(x, 10 - length);
+    y = Math.min(y, 9);
+  } else {
+    x = Math.min(x, 9);
+    y = Math.min(y, 10 - length);
+  }
+
+  return { x, y, gridSize };
+}
+
+// --- Ghost Ship Preview ---
+export function updateGhostShip(container, board, x, y, length, orientation, shipName = '') {
+  clearGhostShip();
   let valid = true;
+
   for (let i = 0; i < length; i++) {
     const hx = orientation === 'horizontal' ? x + i : x;
     const hy = orientation === 'horizontal' ? y : y + i;
@@ -117,108 +154,103 @@ export function highlightPreview(container, board, x, y, length, orientation, sh
     const cell = container.querySelector(`.cell[data-x='${hx}'][data-y='${hy}']`);
     if (!cell) continue;
 
-    const boardCell = board[hy][hx];
-    if (!boardCell || !boardCell.ship) {
-      cell.classList.add('valid-preview');
-    } else {
-      cell.classList.add('invalid-preview');
+    if (board[hy][hx]?.ship) {
       valid = false;
+      cell.classList.add('invalid-preview');
+    } else {
+      cell.classList.add('valid-preview');
     }
+
+    ghostShipCells.push(cell);
   }
 
-  if (shipName) {
+  if (shipPreviewLabel && ghostShipCells.length > 0) {
+    const rect = ghostShipCells[0].getBoundingClientRect();
+    updateShipPreviewLabel(rect.left, rect.top, length, orientation, shipName, valid);
     showShipPreviewLabel();
-    updateShipPreviewLabel(clientX, clientY, length, orientation, valid ? shipName : `${shipName} (Invalid)`);
   }
+
+  return valid;
 }
 
-export function clearPreview(container, board) {
-  if (!container || !board) return;
-  container.querySelectorAll('.cell').forEach(c => {
-    const x = parseInt(c.dataset.x, 10);
-    const y = parseInt(c.dataset.y, 10);
-    const boardCell = board[y][x];
-    c.style.backgroundColor = boardCell && boardCell.ship ? '#808080' : 'transparent';
-    c.classList.remove('valid-preview', 'invalid-preview');
+export function clearGhostShip() {
+  ghostShipCells.forEach(cell => {
+    cell.classList.remove('valid-preview', 'invalid-preview');
   });
+  ghostShipCells = [];
   hideShipPreviewLabel();
 }
 
-// --- Drag & Drop Handlers ---
+// --- Drag/Click-to-place Ships ---
 export function initDragAndDrop(container, board, placeShipCallback) {
-  if (!container || !board) return;
   const ships = document.querySelectorAll('.ship');
 
   ships.forEach(ship => {
-    ship.addEventListener('dragstart', e => {
-      draggedShip = ship;
-      e.dataTransfer.setData('text/plain', ship.dataset.ship);
-    });
-
-    ship.addEventListener('touchstart', e => {
-      draggedShip = ship;
-      const touch = e.touches[0];
-      dragOffset.x = touch.clientX - ship.getBoundingClientRect().left;
-      dragOffset.y = touch.clientY - ship.getBoundingClientRect().top;
-      ship.style.position = 'absolute';
-      ship.style.zIndex = 1000;
-      ship.style.pointerEvents = 'none';
-    });
+    ship.addEventListener('click', () => pickShip(ship, container));
+    ship.addEventListener('touchstart', e => { e.preventDefault(); pickShip(ship, container); });
   });
 
-  // Desktop drop
-  container.addEventListener('dragover', e => e.preventDefault());
-  container.addEventListener('drop', e => {
-    e.preventDefault();
-    if (!draggedShip) return;
-    const rect = container.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / (rect.width / 10));
-    const y = Math.floor((e.clientY - rect.top) / (rect.height / 10));
-    placeShipCallback(draggedShip.dataset.ship, x, y, currentOrientation);
-    draggedShip.remove();
-    draggedShip = null;
-    clearPreview(container, board);
-  });
+  const moveHandler = e => {
+    if (!pickedShipName) return;
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation);
+    updateGhostShip(container, board, x, y, pickedShipLength, currentOrientation, pickedShipName);
+  };
 
-  // Touch move & drop
-  document.addEventListener('touchmove', e => {
-    if (!draggedShip) return;
-    const touch = e.touches[0];
-    draggedShip.style.left = `${touch.clientX - dragOffset.x}px`;
-    draggedShip.style.top = `${touch.clientY - dragOffset.y}px`;
+  container.addEventListener('mousemove', moveHandler);
+  container.addEventListener('touchmove', e => { e.preventDefault(); moveHandler(e); }, { passive: false });
 
-    const rect = container.getBoundingClientRect();
-    const x = Math.floor((touch.clientX - rect.left) / (rect.width / 10));
-    const y = Math.floor((touch.clientY - rect.top) / (rect.height / 10));
+  const placeHandler = e => {
+    if (!pickedShipName) return;
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation);
 
-    highlightPreview(
-      container,
-      board,
-      x,
-      y,
-      parseInt(draggedShip.dataset.length, 10),
-      currentOrientation,
-      draggedShip.dataset.ship,
-      touch.clientX,
-      touch.clientY
-    );
-  });
+    const valid = updateGhostShip(container, board, x, y, pickedShipLength, currentOrientation, pickedShipName);
 
-  document.addEventListener('touchend', e => {
-    if (!draggedShip) return;
-    const rect = container.getBoundingClientRect();
-    const touch = e.changedTouches[0];
-    const x = Math.floor((touch.clientX - rect.left) / (rect.width / 10));
-    const y = Math.floor((touch.clientY - rect.top) / (rect.height / 10));
+    if (!valid) {
+      showMessage('Invalid placement!', 1200);
+      return;
+    }
 
-    placeShipCallback(draggedShip.dataset.ship, x, y, currentOrientation);
-    draggedShip.remove();
-    draggedShip = null;
-    clearPreview(container, board);
+    // Place ship in board data structure
+    const placed = placeShipCallback(pickedShipName, x, y, currentOrientation);
+
+    if (placed) {
+      renderGrid(container, board);
+      showMessage(`${pickedShipName} placed!`);
+    } else {
+      showMessage('Invalid placement!', 1200);
+    }
+
+    pickedShipName = null;
+    pickedShipLength = 0;
+  };
+
+  container.addEventListener('click', placeHandler);
+  container.addEventListener('touchend', e => { e.preventDefault(); placeHandler(e); });
+
+  // --- Listen for rotation key ---
+  document.addEventListener('keydown', e => {
+    if (!pickedShipName) return;
+    if (e.key === 'r' || e.key === 'R') {
+      toggleOrientation();
+      if (pickedShipName) moveHandler(e); // update ghost ship after rotation
+    }
   });
 }
 
-// --- Message Functions ---
+// --- Pick a ship helper ---
+function pickShip(ship) {
+  if (!pickedShipName) {
+    pickedShipName = ship.dataset.ship;
+    pickedShipLength = parseInt(ship.dataset.length, 10);
+    showMessage(`Picked up ${pickedShipName}. Move over grid and click/tap to place.`);
+  }
+}
+
+// --- Messages ---
 export function showMessage(message, duration = 1500) {
   let msgDiv = document.getElementById('message');
   if (!msgDiv) {
@@ -248,7 +280,7 @@ export function showMessage(message, duration = 1500) {
   }, duration);
 }
 
-// --- Screen / Flow Functions ---
+// --- Screens ---
 export function toggleScreen(screen = 'intro') {
   const introScreen = document.getElementById('intro-screen');
   const setupScreen = document.getElementById('setup-screen');
@@ -260,7 +292,6 @@ export function toggleScreen(screen = 'intro') {
     case 'intro': introScreen?.classList.remove('hidden'); break;
     case 'setup': setupScreen?.classList.remove('hidden'); break;
     case 'battle': battleScreen?.classList.remove('hidden'); break;
-    default: console.warn(`Unknown screen: ${screen}`);
   }
 
   const msgDiv = document.getElementById('message');

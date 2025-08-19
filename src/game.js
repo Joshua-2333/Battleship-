@@ -5,7 +5,7 @@ export function createGame() {
   const playerBoard = createGameboard();
   const enemyBoard = createGameboard();
 
-  // Ship lengths and corresponding names
+  // Ship definitions
   const shipsInfo = [
     { length: 5, name: 'Carrier' },
     { length: 4, name: 'Battleship' },
@@ -14,21 +14,20 @@ export function createGame() {
     { length: 2, name: 'Destroyer' }
   ];
 
-  let placedShips = {}; // Track placed ships by name
+  let placedShips = {}; // Tracks ships placed by player
   let orientation = 'horizontal';
   let gameStarted = false;
 
-  // Toggle horizontal/vertical
+  // Toggle horizontal/vertical orientation
   function toggleOrientation() {
     orientation = orientation === 'horizontal' ? 'vertical' : 'horizontal';
     return orientation;
   }
 
-  // Place a ship on the player board
-  // Returns true if successful, false if invalid or already placed
+  // Place a ship on the player board by name
   function placePlayerShipByName(shipName, x, y, shipOrientation = orientation) {
     const shipInfo = shipsInfo.find(s => s.name.toLowerCase() === shipName.toLowerCase());
-    if (!shipInfo) return false; // Unknown ship
+    if (!shipInfo) return false;           // Invalid ship
     if (placedShips[shipName]) return false; // Already placed
 
     if (!playerBoard.isValidPlacement(shipInfo.length, x, y, shipOrientation)) return false;
@@ -38,7 +37,7 @@ export function createGame() {
     return true;
   }
 
-  // Automatically place enemy ships with names
+  // Randomly place enemy ships
   function placeEnemyShipsRandomly() {
     for (const { length, name } of shipsInfo) {
       let placed = false;
@@ -66,7 +65,7 @@ export function createGame() {
     return result;
   }
 
-  // Enemy attacks player
+  // Enemy AI attack
   function computerAttack() {
     let x, y, result;
     do {
@@ -77,7 +76,7 @@ export function createGame() {
     return { x, y, result };
   }
 
-  // Start game
+  // Start the game
   function startGame() {
     placeEnemyShipsRandomly();
     gameStarted = true;

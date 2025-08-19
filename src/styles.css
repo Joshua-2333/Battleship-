@@ -170,19 +170,20 @@ header {
   background-repeat: no-repeat;
   background-position: center;
   position: relative;
-  border: 2px solid #000; /* optional: adds an outer frame */
+  border: 2px solid #000;
 }
 
 /* Each cell shows only borders, transparent inside */
 .cell {
   width: 100%;
   height: 100%;
-  border: 1px solid #000; /* ✅ black grid lines */
-  background-color: transparent !important; /* ✅ force transparency */
+  border: 1px solid #000;
+  background-color: transparent;
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
 
+/* --- Ship states --- */
 .cell.valid-preview {
   background-color: rgba(50,205,50,0.8) !important;
   animation: pulse-green 0.5s infinite alternate;
@@ -205,6 +206,16 @@ header {
   background-color: white !important;
   opacity: 0.7;
   transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+/* --- Placed ships on the grid --- */
+.placed-ship {
+  position: absolute;
+  z-index: 5;
+  background-color: #deb887;
+  border: 2px solid #8b4513;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 /* --- Ship Dock & Draggable Ships --- */
@@ -372,27 +383,10 @@ header {
 
 /* --- Mobile adjustments --- */
 @media (max-width: 768px) {
-  #players {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .gameboard {
-    width: 90vw;
-    height: 90vw;
-    max-width: 400px;
-    max-height: 400px;
-  }
-
-  #controls button {
-    width: 80%;
-  }
-
-  .ship-cell {
-    width: 32px;
-    height: 32px;
-  }
+  #players { flex-direction: column; align-items: center; gap: 20px; }
+  .gameboard { width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; }
+  #controls button { width: 80%; }
+  .ship-cell { width: 32px; height: 32px; }
 }
 
 @media (max-width: 480px) {
@@ -404,11 +398,6 @@ header {
   #ship-preview-label { font-size: 0.8rem; padding: 4px 8px; }
   #controls { flex-direction: column; }
   #controls button { width: 90%; margin: 4px 0; }
-
-  #ship-dock {
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
+  #ship-dock { flex-direction: column; align-items: center; gap: 8px; }
   .ship-cell { width: 24px; height: 24px; }
 }

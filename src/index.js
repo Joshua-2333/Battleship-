@@ -2,9 +2,8 @@
 import './styles.css';
 import { createGame } from './game';
 import { 
-  renderGrid, highlightPreview, clearPreview, showMessage, 
-  toggleScreen, updateCell, hideShipPreviewLabel, createShipPreviewLabel, 
-  initDragAndDrop, getOrientation, toggleOrientation
+  renderGrid, showMessage, toggleScreen, updateCell, 
+  createShipPreviewLabel, initDragAndDrop, toggleOrientation
 } from './ui';
 import { 
   getLogo, getStartBtn, getPlayerNameInput, getPlayerGridContainer,
@@ -35,19 +34,20 @@ renderGrid(playerGridContainer, game.playerBoard.board, true);
 renderGrid(battlePlayerGridContainer, game.playerBoard.board, true);
 renderGrid(enemyGridContainer, game.enemyBoard.board, false);
 
-// --- Setup ship dock ---
+// --- Setup ship dock & drag/drop ---
 function setupShipDock() {
   const dockShips = document.querySelectorAll('#ship-dock .ship');
+
   dockShips.forEach(shipEl => {
     shipEl.style.display = game.placedShips[shipEl.dataset.ship] ? 'none' : 'flex';
+    shipEl.classList.remove('picked'); // remove highlight on setup
   });
 
-  initDragAndDrop(playerGridContainer, game.playerBoard.board, (shipName, x, y) => {
-    const orientation = getOrientation();
+  initDragAndDrop(playerGridContainer, game.playerBoard.board, (shipName, x, y, orientation) => {
     const placed = game.placePlayerShipByName(shipName, x, y, orientation);
     if (!placed) {
       showMessage('Invalid placement!');
-      return;
+      return false;
     }
 
     renderGrid(playerGridContainer, game.playerBoard.board, true);
@@ -57,9 +57,22 @@ function setupShipDock() {
 
     game.placedShips[shipName] = true;
 
+    // Remove highlight from any picked ship
+    dockShips.forEach(s => s.classList.remove('picked'));
+
+    // Enable confirm if all ships placed
     const allPlaced = game.shipsInfo.every(s => game.placedShips[s.name]);
     confirmBtn.disabled = !allPlaced;
     if (allPlaced) showMessage('All ships placed! Confirm to start the battle!');
+    return true;
+  });
+
+  // Highlight picked ship in dock
+  dockShips.forEach(shipEl => {
+    shipEl.addEventListener('click', () => {
+      dockShips.forEach(s => s.classList.remove('picked'));
+      shipEl.classList.add('picked');
+    });
   });
 }
 
