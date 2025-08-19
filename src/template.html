@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Battleship</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <!-- Header with logo -->
@@ -26,13 +27,45 @@
   </div>
 
   <!-- Game Screen Wrapper -->
-  <div id="game-screen" class="hidden">
+  <div id="game-screen">
     <!-- Setup Screen: Player places ships -->
-    <div id="setup-screen">
+    <div id="setup-screen" class="hidden">
       <h2>Place Your Ships</h2>
       <div class="player">
-        <img id="player1-img" src="./images/placeholder.png" alt="Player 1">
+        <img id="player1-img-setup" src="./images/placeholder.png" alt="Player 1">
         <div id="player-grid" class="gameboard"></div>
+      </div>
+
+      <!-- Ship Dock (Draggable Ships) -->
+      <div id="ship-dock">
+        <h3>Drag Your Ships</h3>
+        <div class="ship-container">
+          <div class="ship" id="carrier" draggable="true" data-ship="Carrier" data-length="5">
+            <div class="ship-cell"></div><div class="ship-cell"></div>
+            <div class="ship-cell"></div><div class="ship-cell"></div>
+            <div class="ship-cell"></div>
+          </div>
+          <div class="ship" id="battleship" draggable="true" data-ship="Battleship" data-length="4">
+            <div class="ship-cell"></div><div class="ship-cell"></div>
+            <div class="ship-cell"></div><div class="ship-cell"></div>
+          </div>
+          <div class="ship" id="cruiser" draggable="true" data-ship="Cruiser" data-length="3">
+            <div class="ship-cell"></div><div class="ship-cell"></div><div class="ship-cell"></div>
+          </div>
+          <div class="ship" id="submarine" draggable="true" data-ship="Submarine" data-length="3">
+            <div class="ship-cell"></div><div class="ship-cell"></div><div class="ship-cell"></div>
+          </div>
+          <div class="ship" id="destroyer" draggable="true" data-ship="Destroyer" data-length="2">
+            <div class="ship-cell"></div><div class="ship-cell"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls: Inline buttons under dock -->
+      <div id="controls">
+        <button id="orientation-btn">Rotate Ship</button>
+        <button id="confirm-btn" disabled>Confirm Placement</button>
+        <button id="reset-btn">Reset Placement</button>
       </div>
     </div>
 
@@ -51,13 +84,6 @@
           <div id="enemy-grid" class="gameboard"></div>
         </div>
       </div>
-    </div>
-
-    <!-- Controls -->
-    <div id="controls">
-      <button id="orientation-btn">Orientation: Horizontal</button>
-      <button id="confirm-btn" disabled>Confirm Placement</button>
-      <button id="reset-btn">Reset Placement</button>
     </div>
   </div>
 

@@ -14,7 +14,7 @@ export function createGame() {
     { length: 2, name: 'Destroyer' }
   ];
 
-  let currentShipIndex = 0;
+  let placedShips = {}; // Track placed ships by name
   let orientation = 'horizontal';
   let gameStarted = false;
 
@@ -24,15 +24,17 @@ export function createGame() {
     return orientation;
   }
 
-  // Place player ship with name
-  function placePlayerShip(x, y) {
-    if (currentShipIndex >= shipsInfo.length) return false;
+  // Place a ship on the player board
+  // Returns true if successful, false if invalid or already placed
+  function placePlayerShipByName(shipName, x, y, shipOrientation = orientation) {
+    const shipInfo = shipsInfo.find(s => s.name.toLowerCase() === shipName.toLowerCase());
+    if (!shipInfo) return false; // Unknown ship
+    if (placedShips[shipName]) return false; // Already placed
 
-    const { length, name } = shipsInfo[currentShipIndex];
-    if (!playerBoard.isValidPlacement(length, x, y, orientation)) return false;
+    if (!playerBoard.isValidPlacement(shipInfo.length, x, y, shipOrientation)) return false;
 
-    playerBoard.placeShip(length, x, y, orientation, name);
-    currentShipIndex++;
+    playerBoard.placeShip(shipInfo.length, x, y, shipOrientation, shipName);
+    placedShips[shipName] = { x, y, orientation: shipOrientation };
     return true;
   }
 
@@ -85,7 +87,7 @@ export function createGame() {
   function resetGame() {
     playerBoard.resetBoard();
     enemyBoard.resetBoard();
-    currentShipIndex = 0;
+    placedShips = {};
     orientation = 'horizontal';
     gameStarted = false;
   }
@@ -94,11 +96,11 @@ export function createGame() {
     playerBoard,
     enemyBoard,
     shipsInfo,
-    currentShipIndex,
+    placedShips,
     orientation,
     gameStarted,
     toggleOrientation,
-    placePlayerShip,
+    placePlayerShipByName,
     attackEnemy,
     computerAttack,
     startGame,
