@@ -157,11 +157,17 @@ header {
   gap: 10px;
 }
 
-/* Player 2 battle: image on right */
+/* Player 1 battle: image on left */
+.player1-battle {
+  flex-direction: row;
+}
+
+/* Player 2 battle: image on right of their grid */
 .player2-battle {
   flex-direction: row-reverse;
 }
 
+/* Player images */
 .player img {
   width: 120px;
   height: auto;
@@ -323,9 +329,9 @@ header {
 /* --- Orientation Wrapper & Rotate Indicator --- */
 .orientation-wrapper {
   display: flex;
-  flex-direction: column; /* stack button and indicator vertically */
+  flex-direction: column;
   align-items: center;
-  gap: 4px; /* space between button and text */
+  gap: 4px;
 }
 
 #rotate-indicator {

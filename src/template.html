@@ -29,7 +29,7 @@
   <div id="game-screen">
     <!-- Setup Screen: Player places ships -->
     <div id="setup-screen" class="hidden">
-      <div class="player">
+      <div class="player setup-player">
         <img id="player1-img-setup" src="./images/placeholder.png" alt="Player 1">
         <div id="player-grid" class="gameboard"></div>
       </div>
@@ -72,17 +72,18 @@
 
     <!-- Battle Screen: Both boards visible -->
     <div id="battle-screen" class="hidden">
-      <div id="players">
+      <div id="players" class="battle-players">
         <!-- Player 1: image on left -->
-        <div class="player">
+        <div class="player player1-battle">
           <img id="player1-img-battle" src="./images/placeholder.png" alt="Player 1">
           <div id="player-grid-battle" class="gameboard"></div>
         </div>
 
         <!-- Player 2: image on right -->
         <div class="player player2-battle">
+          <!-- IMAGE MOVED BEFORE GRID -->
+          <img id="player2-img" src="./images/player2.png" alt="Enemy">
           <div id="enemy-grid" class="gameboard"></div>
-          <img id="player2-img" src="./images/placeholder.png" alt="Enemy">
         </div>
       </div>
     </div>
