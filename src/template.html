@@ -61,7 +61,10 @@
 
       <!-- Controls: Inline buttons under dock -->
       <div id="controls">
-        <button id="orientation-btn">Rotate Ship</button>
+        <div class="orientation-wrapper">
+          <button id="orientation-btn">Rotate Ship</button>
+          <div id="rotate-indicator">Press <strong>R</strong> to rotate</div>
+        </div>
         <button id="confirm-btn" disabled>Confirm Placement</button>
         <button id="reset-btn">Reset Placement</button>
       </div>
@@ -70,13 +73,16 @@
     <!-- Battle Screen: Both boards visible -->
     <div id="battle-screen" class="hidden">
       <div id="players">
+        <!-- Player 1: image on left -->
         <div class="player">
           <img id="player1-img-battle" src="./images/placeholder.png" alt="Player 1">
           <div id="player-grid-battle" class="gameboard"></div>
         </div>
-        <div class="player">
-          <img id="player2-img" src="./images/placeholder.png" alt="Enemy">
+
+        <!-- Player 2: image on right -->
+        <div class="player player2-battle">
           <div id="enemy-grid" class="gameboard"></div>
+          <img id="player2-img" src="./images/placeholder.png" alt="Enemy">
         </div>
       </div>
     </div>

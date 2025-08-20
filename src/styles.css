@@ -1,11 +1,11 @@
 /* --- Global Styles --- */
-*{
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  margin: 0;
   font-family: 'Georgia', serif;
   display: flex;
   flex-direction: column;
@@ -16,6 +16,7 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  overflow-x: hidden;
 }
 
 /* --- Header --- */
@@ -54,7 +55,6 @@ header {
   justify-content: center;
   width: 100%;
   padding: 20px;
-  box-sizing: border-box;
 }
 
 #scroll-bg {
@@ -136,7 +136,6 @@ header {
   align-items: center;
   width: 100%;
   padding: 20px;
-  box-sizing: border-box;
 }
 
 /* Player / Battle Layout */
@@ -149,16 +148,23 @@ header {
   width: 100%;
 }
 
+/* --- Player Layouts --- */
 .player {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Player 2 battle: image on right */
+.player2-battle {
+  flex-direction: row-reverse;
 }
 
 .player img {
   width: 120px;
   height: auto;
-  margin-bottom: 10px;
 }
 
 /* --- FIXED GAMEBOARD GRID --- */
@@ -176,7 +182,7 @@ header {
   border: 2px solid #000;
 }
 
-/* Each cell is now locked to 50×50px */
+/* Each cell */
 .cell {
   width: 50px;
   height: 50px;
@@ -204,16 +210,14 @@ header {
 .cell.hit {
   background-color: red !important;
   transform: scale(1.1) rotate(-5deg);
-  transition: transform 0.1s ease, background-color 0.2s ease;
 }
 
 .cell.miss {
   background-color: white !important;
   opacity: 0.7;
-  transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
-/* --- Placed ships on the grid --- */
+/* --- Placed ships --- */
 .placed-ship {
   position: absolute;
   z-index: 10;
@@ -221,34 +225,18 @@ header {
   background-color: #deb887;
   border: 2px solid #8b4513;
   border-radius: 4px;
-  pointer-events: none; /* prevents dragging once placed */
+  pointer-events: none;
 }
 
-.placed-ship.horizontal {
-  flex-direction: row;
-  height: 50px;
-}
-
-.placed-ship.horizontal .ship-cell {
-  width: 50px;
-  height: 50px;
-}
-
-.placed-ship.vertical {
-  flex-direction: column;
-  width: 50px;
-}
-
-.placed-ship.vertical .ship-cell {
-  width: 50px;
-  height: 50px;
-}
+.placed-ship.horizontal { flex-direction: row; height: 50px; }
+.placed-ship.vertical { flex-direction: column; width: 50px; }
 
 .placed-ship .ship-cell {
+  width: 50px;
+  height: 50px;
   background-color: #deb887;
   border: 2px solid #8b4513;
   border-radius: 4px;
-  box-sizing: border-box;
 }
 
 /* --- Ship Dock & Draggable Ships --- */
@@ -298,7 +286,6 @@ header {
   transform: scale(1.05);
 }
 
-/* Hover effect for docked ships */
 .ship:hover {
   transform: translateY(-5px) scale(1.05);
   box-shadow: 0 6px 12px rgba(0,0,0,0.4);
@@ -313,6 +300,7 @@ header {
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 10px;
+  gap: 10px;
 }
 
 #controls button {
@@ -332,7 +320,23 @@ header {
   transform: scale(1.05);
 }
 
-/* Floating ship preview label */
+/* --- Orientation Wrapper & Rotate Indicator --- */
+.orientation-wrapper {
+  display: flex;
+  flex-direction: column; /* stack button and indicator vertically */
+  align-items: center;
+  gap: 4px; /* space between button and text */
+}
+
+#rotate-indicator {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #3e2723;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+/* --- Floating ship preview label --- */
 #ship-preview-label {
   position: absolute;
   padding: 6px 12px;
@@ -345,64 +349,25 @@ header {
   transition: transform 0.1s ease, opacity 0.2s ease;
   display: none;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   font-size: 1rem;
-}
-
-.cell.drop-target {
-  outline: 3px dashed #32cd32;
-  outline-offset: -3px;
-}
-
-.cell.drop-invalid {
-  outline: 3px dashed #ff6347;
-  outline-offset: -3px;
-}
-
-#message {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
-  background-color: rgba(0,0,0,0.7);
-  color: white;
-  border-radius: 5px;
-  z-index: 10;
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
 .hidden { display: none !important; }
 
 /* --- Animations --- */
-@keyframes pulse-green {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.05); }
-}
-
-@keyframes pulse-red {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.05); }
-}
-
-@keyframes pulse-drag {
-  0% { transform: scale(1.05) translateY(-2px); }
-  100% { transform: scale(1.08) translateY(-5px); }
-}
-
-@keyframes wiggle {
-  0% { transform: rotate(0deg); }
-  15% { transform: rotate(-10deg); }
-  30% { transform: rotate(10deg); }
-  45% { transform: rotate(-10deg); }
-  60% { transform: rotate(10deg); }
-  75% { transform: rotate(-5deg); }
-  100% { transform: rotate(0deg); }
-}
-
+@keyframes pulse-green { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+@keyframes pulse-red { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+@keyframes pulse-drag { 0% { transform: scale(1.05) translateY(-2px); } 100% { transform: scale(1.08) translateY(-5px); } }
+@keyframes wiggle { 0% { transform: rotate(0deg); } 15% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 45% { transform: rotate(-10deg); } 60% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
 .ship.invalid-drop { animation: wiggle 0.5s ease-in-out; }
 
 /* --- Mobile adjustments --- */
+@media (max-width: 1024px) {
+  .gameboard { width: 400px; height: 400px; }
+  .player img { width: 100px; }
+}
+
 @media (max-width: 768px) {
   #players { flex-direction: column; align-items: center; gap: 20px; }
   .gameboard { width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; }
@@ -411,9 +376,9 @@ header {
 }
 
 @media (max-width: 480px) {
-  #logo { width: 60%; left: 15%; transform: none; }
+  #logo { width: 60%; }
   #scroll-bg { max-width: 320px; width: 90%; }
-  #intro-content { transform: translate(-45%, -50%); max-width: 240px; }
+  #intro-content { max-width: 240px; }
   #player-name { font-size: 0.9rem; padding: 6px 8px; max-width: 200px; }
   #start-btn { width: 120px; height: 50px; }
   #ship-preview-label { font-size: 0.8rem; padding: 4px 8px; }

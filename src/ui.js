@@ -9,7 +9,7 @@ let ghostShipCells = [];
 const CELL_SIZE = 50; // matches CSS grid
 
 // --- Orientation ---
-export function toggleOrientation(buttonEl) {
+export function toggleOrientation(buttonEl = null) {
   currentOrientation = currentOrientation === 'horizontal' ? 'vertical' : 'horizontal';
   if (buttonEl) buttonEl.textContent = `Rotate: ${capitalize(currentOrientation)}`;
   showMessage(`Orientation: ${capitalize(currentOrientation)}`, 1000);
@@ -269,11 +269,12 @@ export function initDragAndDrop(container, board, placeShipCallback) {
   container.addEventListener('click', placeHandler);
   container.addEventListener('touchend', e => { e.preventDefault(); placeHandler(e); });
 
+  // --- Rotation key ---
   document.addEventListener('keydown', e => {
     if (!pickedShipName) return;
-    if (e.key === 'r' || e.key === 'R') {
+    if (e.key.toLowerCase() === 'r') {
       toggleOrientation();
-      moveHandler(e);
+      moveHandler(e); // immediately update preview
     }
   });
 }
