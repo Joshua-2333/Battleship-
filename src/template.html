@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Battleship</title>
-  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <!-- Header with logo -->
@@ -30,7 +29,6 @@
   <div id="game-screen">
     <!-- Setup Screen: Player places ships -->
     <div id="setup-screen" class="hidden">
-      <h2>Place Your Ships</h2>
       <div class="player">
         <img id="player1-img-setup" src="./images/placeholder.png" alt="Player 1">
         <div id="player-grid" class="gameboard"></div>
@@ -71,15 +69,12 @@
 
     <!-- Battle Screen: Both boards visible -->
     <div id="battle-screen" class="hidden">
-      <h2>Battle!</h2>
       <div id="players">
         <div class="player">
-          <h3>Your Board</h3>
           <img id="player1-img-battle" src="./images/placeholder.png" alt="Player 1">
           <div id="player-grid-battle" class="gameboard"></div>
         </div>
         <div class="player">
-          <h3>Enemy Board</h3>
           <img id="player2-img" src="./images/placeholder.png" alt="Enemy">
           <div id="enemy-grid" class="gameboard"></div>
         </div>

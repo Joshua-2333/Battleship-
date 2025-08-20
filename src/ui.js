@@ -6,11 +6,12 @@ let currentOrientation = 'horizontal';
 let pickedShipName = null;
 let pickedShipLength = 0;
 let ghostShipCells = [];
+const CELL_SIZE = 50; // matches CSS grid
 
 // --- Orientation ---
 export function toggleOrientation(buttonEl) {
   currentOrientation = currentOrientation === 'horizontal' ? 'vertical' : 'horizontal';
-  if (buttonEl) buttonEl.textContent = `Rotate Ship: ${capitalize(currentOrientation)}`;
+  if (buttonEl) buttonEl.textContent = `Rotate: ${capitalize(currentOrientation)}`;
   showMessage(`Orientation: ${capitalize(currentOrientation)}`, 1000);
   return currentOrientation;
 }
@@ -34,6 +35,7 @@ export function createShipPreviewLabel() {
       pointerEvents: 'none',
       zIndex: 20,
       display: 'none',
+      fontSize: '12px'
     });
     document.body.appendChild(shipPreviewLabel);
   }
@@ -58,7 +60,6 @@ export function hideShipPreviewLabel() {
 export function renderGrid(container, board) {
   if (!container || !board) return;
   container.innerHTML = '';
-  const gridSize = container.clientWidth / 10;
   container.style.position = 'relative';
 
   for (let y = 0; y < board.length; y++) {
@@ -68,40 +69,63 @@ export function renderGrid(container, board) {
       cell.dataset.x = x;
       cell.dataset.y = y;
       Object.assign(cell.style, {
-        width: `${gridSize}px`,
-        height: `${gridSize}px`,
+        width: `${CELL_SIZE}px`,
+        height: `${CELL_SIZE}px`,
         boxSizing: 'border-box',
         border: '1px solid rgba(0,0,0,0.1)',
         backgroundColor: 'transparent',
+        position: 'absolute',
+        left: `${x * CELL_SIZE}px`,
+        top: `${y * CELL_SIZE}px`,
       });
       container.appendChild(cell);
     }
   }
 
-  // Render placed ships
+  renderShips(container, board);
+}
+
+// --- Render all ships ---
+function renderShips(container, board) {
+  if (!container || !board) return;
+  const isEnemyGrid = container.id === 'enemy-grid';
   board.forEach((row, y) => {
     row.forEach((cellData, x) => {
-      if (cellData?.ship && cellData.ship.placed) {
-        const ship = cellData.ship;
-        const shipDiv = document.createElement('div');
-        shipDiv.classList.add('placed-ship');
-        shipDiv.style.width = ship.orientation === 'horizontal'
-          ? `${gridSize * ship.length}px`
-          : `${gridSize}px`;
-        shipDiv.style.height = ship.orientation === 'horizontal'
-          ? `${gridSize}px`
-          : `${gridSize * ship.length}px`;
-        shipDiv.style.top = `${gridSize * ship.startY}px`;
-        shipDiv.style.left = `${gridSize * ship.startX}px`;
-        shipDiv.style.transform = `rotate(0deg)`;
-        shipDiv.title = ship.name;
-        container.appendChild(shipDiv);
+      if (cellData?.ship && cellData.ship.placed && cellData.ship.startX === x && cellData.ship.startY === y) {
+        if (isEnemyGrid) return;
+        renderShip(container, cellData.ship);
       }
     });
   });
 }
 
-// --- Update individual cell (hit/miss) ---
+// --- Render a single ship ---
+export function renderShip(container, ship) {
+  if (!container || !ship) return;
+  const shipDiv = document.createElement('div');
+  shipDiv.classList.add('placed-ship');
+  shipDiv.style.position = 'absolute';
+  shipDiv.style.backgroundColor = '#deb887';
+  shipDiv.style.border = '2px solid #8b4513';
+  shipDiv.style.borderRadius = '4px';
+  shipDiv.style.zIndex = '5';
+
+  if (ship.orientation === 'horizontal') {
+    shipDiv.style.width = `${CELL_SIZE * ship.length}px`;
+    shipDiv.style.height = `${CELL_SIZE}px`;
+  } else {
+    shipDiv.style.width = `${CELL_SIZE}px`;
+    shipDiv.style.height = `${CELL_SIZE * ship.length}px`;
+  }
+
+  shipDiv.style.top = `${CELL_SIZE * ship.startY}px`;
+  shipDiv.style.left = `${CELL_SIZE * ship.startX}px`;
+  shipDiv.title = ship.name;
+
+  container.appendChild(shipDiv);
+}
+
+// --- Update individual cell ---
 export function updateCell(container, x, y, result) {
   if (!container) return;
   const cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
@@ -119,28 +143,36 @@ export function updateCell(container, x, y, result) {
 }
 
 // --- Snap coordinates to grid ---
-function getGridCoords(clientX, clientY, container, length, orientation) {
+function getGridCoords(clientX, clientY, container, length, orientation, board) {
   const rect = container.getBoundingClientRect();
-  const gridSize = rect.width / 10;
+  let x = Math.floor((clientX - rect.left) / CELL_SIZE);
+  let y = Math.floor((clientY - rect.top) / CELL_SIZE);
 
-  let x = Math.floor((clientX - rect.left) / gridSize);
-  let y = Math.floor((clientY - rect.top) / gridSize);
+  if (!board) return { x, y };
+
+  const width = board[0].length;
+  const height = board.length;
 
   if (orientation === 'horizontal') {
-    x = Math.min(x, 10 - length);
-    y = Math.min(y, 9);
+    x = Math.min(x, width - length);
+    y = Math.min(y, height - 1);
   } else {
-    x = Math.min(x, 9);
-    y = Math.min(y, 10 - length);
+    x = Math.min(x, width - 1);
+    y = Math.min(y, height - length);
   }
 
-  return { x, y, gridSize };
+  x = Math.max(0, x);
+  y = Math.max(0, y);
+
+  return { x, y };
 }
 
 // --- Ghost Ship Preview ---
 export function updateGhostShip(container, board, x, y, length, orientation, shipName = '') {
+  if (!container || !board) return false;
   clearGhostShip();
   let valid = true;
+  const tempCells = [];
 
   for (let i = 0; i < length; i++) {
     const hx = orientation === 'horizontal' ? x + i : x;
@@ -161,12 +193,16 @@ export function updateGhostShip(container, board, x, y, length, orientation, shi
       cell.classList.add('valid-preview');
     }
 
-    ghostShipCells.push(cell);
+    tempCells.push(cell);
   }
 
+  ghostShipCells = tempCells;
+
+  // Position label exactly on first cell
   if (shipPreviewLabel && ghostShipCells.length > 0) {
-    const rect = ghostShipCells[0].getBoundingClientRect();
-    updateShipPreviewLabel(rect.left, rect.top, length, orientation, shipName, valid);
+    const top = y * CELL_SIZE;
+    const left = x * CELL_SIZE;
+    updateShipPreviewLabel(left, top, length, orientation, shipName, valid);
     showShipPreviewLabel();
   }
 
@@ -183,18 +219,21 @@ export function clearGhostShip() {
 
 // --- Drag/Click-to-place Ships ---
 export function initDragAndDrop(container, board, placeShipCallback) {
+  if (!container || !board || typeof placeShipCallback !== 'function') return;
+
   const ships = document.querySelectorAll('.ship');
+  if (!ships || ships.length === 0) return;
 
   ships.forEach(ship => {
-    ship.addEventListener('click', () => pickShip(ship, container));
-    ship.addEventListener('touchstart', e => { e.preventDefault(); pickShip(ship, container); });
+    ship.addEventListener('click', () => pickShip(ship));
+    ship.addEventListener('touchstart', e => { e.preventDefault(); pickShip(ship); });
   });
 
   const moveHandler = e => {
     if (!pickedShipName) return;
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation);
+    const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation, board);
     updateGhostShip(container, board, x, y, pickedShipLength, currentOrientation, pickedShipName);
   };
 
@@ -205,7 +244,7 @@ export function initDragAndDrop(container, board, placeShipCallback) {
     if (!pickedShipName) return;
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation);
+    const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation, board);
 
     const valid = updateGhostShip(container, board, x, y, pickedShipLength, currentOrientation, pickedShipName);
 
@@ -214,7 +253,6 @@ export function initDragAndDrop(container, board, placeShipCallback) {
       return;
     }
 
-    // Place ship in board data structure
     const placed = placeShipCallback(pickedShipName, x, y, currentOrientation);
 
     if (placed) {
@@ -231,23 +269,21 @@ export function initDragAndDrop(container, board, placeShipCallback) {
   container.addEventListener('click', placeHandler);
   container.addEventListener('touchend', e => { e.preventDefault(); placeHandler(e); });
 
-  // --- Listen for rotation key ---
   document.addEventListener('keydown', e => {
     if (!pickedShipName) return;
     if (e.key === 'r' || e.key === 'R') {
       toggleOrientation();
-      if (pickedShipName) moveHandler(e); // update ghost ship after rotation
+      moveHandler(e);
     }
   });
 }
 
 // --- Pick a ship helper ---
 function pickShip(ship) {
-  if (!pickedShipName) {
-    pickedShipName = ship.dataset.ship;
-    pickedShipLength = parseInt(ship.dataset.length, 10);
-    showMessage(`Picked up ${pickedShipName}. Move over grid and click/tap to place.`);
-  }
+  if (!ship || pickedShipName) return;
+  pickedShipName = ship.dataset.ship;
+  pickedShipLength = parseInt(ship.dataset.length, 10);
+  showMessage(`Picked up ${pickedShipName}. Move over grid and click/tap to place.`);
 }
 
 // --- Messages ---
@@ -261,11 +297,12 @@ export function showMessage(message, duration = 1500) {
       top: '10px',
       left: '50%',
       transform: 'translateX(-50%)',
-      padding: '10px 20px',
+      padding: '8px 15px',
       backgroundColor: 'rgba(0,0,0,0.7)',
       color: 'white',
       borderRadius: '5px',
       zIndex: 10,
+      fontSize: '12px',
       transition: 'all 0.3s ease',
     });
     document.body.appendChild(msgDiv);

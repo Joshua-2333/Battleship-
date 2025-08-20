@@ -1,4 +1,9 @@
 /* --- Global Styles --- */
+*{
+    margin: 0;
+    padding: 0;
+}
+
 body {
   margin: 0;
   font-family: 'Georgia', serif;
@@ -156,15 +161,13 @@ header {
   margin-bottom: 10px;
 }
 
-/* Gameboard grid */
+/* --- FIXED GAMEBOARD GRID --- */
 .gameboard {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
+  grid-template-columns: repeat(10, 50px);
+  grid-template-rows: repeat(10, 50px);
   width: 500px;
   height: 500px;
-  max-width: 90vw;
-  max-height: 90vw;
   background-image: url('./images/background.png'); 
   background-size: cover;
   background-repeat: no-repeat;
@@ -173,10 +176,10 @@ header {
   border: 2px solid #000;
 }
 
-/* Each cell shows only borders, transparent inside */
+/* Each cell is now locked to 50×50px */
 .cell {
-  width: 100%;
-  height: 100%;
+  width: 50px;
+  height: 50px;
   border: 1px solid #000;
   background-color: transparent;
   box-sizing: border-box;
@@ -188,12 +191,14 @@ header {
   background-color: rgba(50,205,50,0.8) !important;
   animation: pulse-green 0.5s infinite alternate;
   border: 2px solid #32cd32;
+  z-index: 15;
 }
 
 .cell.invalid-preview {
   background-color: rgba(255,99,71,0.8) !important;
   animation: pulse-red 0.5s infinite alternate;
   border: 2px solid #ff6347;
+  z-index: 15;
 }
 
 .cell.hit {
@@ -211,11 +216,39 @@ header {
 /* --- Placed ships on the grid --- */
 .placed-ship {
   position: absolute;
-  z-index: 5;
+  z-index: 10;
+  display: flex;
   background-color: #deb887;
   border: 2px solid #8b4513;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  pointer-events: none; /* prevents dragging once placed */
+}
+
+.placed-ship.horizontal {
+  flex-direction: row;
+  height: 50px;
+}
+
+.placed-ship.horizontal .ship-cell {
+  width: 50px;
+  height: 50px;
+}
+
+.placed-ship.vertical {
+  flex-direction: column;
+  width: 50px;
+}
+
+.placed-ship.vertical .ship-cell {
+  width: 50px;
+  height: 50px;
+}
+
+.placed-ship .ship-cell {
+  background-color: #deb887;
+  border: 2px solid #8b4513;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
 /* --- Ship Dock & Draggable Ships --- */
@@ -265,19 +298,14 @@ header {
   transform: scale(1.05);
 }
 
-/* --- Hover "Floating" Animation for Ships --- */
+/* Hover effect for docked ships */
 .ship:hover {
   transform: translateY(-5px) scale(1.05);
   box-shadow: 0 6px 12px rgba(0,0,0,0.4);
 }
 
-.ship.horizontal {
-  flex-direction: row;
-}
-
-.ship.vertical {
-  flex-direction: column;
-}
+.ship.horizontal { flex-direction: row; }
+.ship.vertical { flex-direction: column; }
 
 /* --- Controls --- */
 #controls {
@@ -321,7 +349,6 @@ header {
   font-size: 1rem;
 }
 
-/* Highlighting valid drop zones */
 .cell.drop-target {
   outline: 3px dashed #32cd32;
   outline-offset: -3px;
@@ -332,7 +359,6 @@ header {
   outline-offset: -3px;
 }
 
-/* Message popup */
 #message {
   position: absolute;
   top: 10px;
@@ -346,10 +372,7 @@ header {
   transition: all 0.3s ease;
 }
 
-/* Hidden class */
-.hidden {
-  display: none !important;
-}
+.hidden { display: none !important; }
 
 /* --- Animations --- */
 @keyframes pulse-green {
@@ -377,9 +400,7 @@ header {
   100% { transform: rotate(0deg); }
 }
 
-.ship.invalid-drop {
-  animation: wiggle 0.5s ease-in-out;
-}
+.ship.invalid-drop { animation: wiggle 0.5s ease-in-out; }
 
 /* --- Mobile adjustments --- */
 @media (max-width: 768px) {

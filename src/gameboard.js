@@ -2,19 +2,21 @@
 import createShip from './ship';
 
 function createGameboard(size = 10) {
-  // 2D board array, null = empty, {type, ship?, index?} = occupied/attacked
+  // 2D board array: null = empty, {type, ship?, index?} = occupied/attacked
   const board = Array.from({ length: size }, () => Array(size).fill(null));
   const ships = [];
 
   // Check if a ship placement is valid
   function isValidPlacement(length, x, y, direction) {
+    if (x < 0 || y < 0 || x >= size || y >= size) return false;
+
     if (direction === 'horizontal') {
-      if (x + length > size) return false;
+      if (x + length > size) return false; // can't go past right edge
       for (let i = 0; i < length; i++) {
         if (board[y][x + i] !== null) return false;
       }
     } else { // vertical
-      if (y + length > size) return false;
+      if (y + length > size) return false; // can't go past bottom edge
       for (let i = 0; i < length; i++) {
         if (board[y + i][x] !== null) return false;
       }
@@ -25,12 +27,19 @@ function createGameboard(size = 10) {
   // Place a ship on the board
   function placeShip(length, x, y, direction = 'horizontal', name = '') {
     if (!isValidPlacement(length, x, y, direction)) {
-      throw new Error('Invalid placement');
+      console.warn(`Invalid placement for ship "${name}" at (${x}, ${y}) direction: ${direction}`);
+      return null;
     }
 
     const ship = createShip(length, name);
-    const positions = [];
 
+    // Add UI properties
+    ship.startX = x;
+    ship.startY = y;
+    ship.orientation = direction;
+    ship.placed = true;
+
+    const positions = [];
     for (let i = 0; i < length; i++) {
       const pos = direction === 'horizontal' ? [x + i, y] : [x, y + i];
       board[pos[1]][pos[0]] = { type: 'ship', ship, index: i };

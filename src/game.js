@@ -27,12 +27,18 @@ export function createGame() {
   // Place a ship on the player board by name
   function placePlayerShipByName(shipName, x, y, shipOrientation = orientation) {
     const shipInfo = shipsInfo.find(s => s.name.toLowerCase() === shipName.toLowerCase());
-    if (!shipInfo) return false;           // Invalid ship
+    if (!shipInfo) return false;            // Invalid ship
     if (placedShips[shipName]) return false; // Already placed
 
-    if (!playerBoard.isValidPlacement(shipInfo.length, x, y, shipOrientation)) return false;
+    const valid = playerBoard.isValidPlacement(shipInfo.length, x, y, shipOrientation);
+    if (!valid) {
+      console.warn(`Cannot place ${shipName} at (${x}, ${y}) orientation: ${shipOrientation}`);
+      return false;
+    }
 
-    playerBoard.placeShip(shipInfo.length, x, y, shipOrientation, shipName);
+    const ship = playerBoard.placeShip(shipInfo.length, x, y, shipOrientation, shipName);
+    if (!ship) return false; // Defensive: placeShip can fail
+
     placedShips[shipName] = { x, y, orientation: shipOrientation };
     return true;
   }
