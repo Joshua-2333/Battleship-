@@ -167,10 +167,13 @@ header {
   flex-direction: row-reverse;
 }
 
-/* Player images */
+/* Player images scale with gameboard (max 500x500) */
 .player img {
-  width: 120px;
+  width: 100%;
+  max-width: 500px;
   height: auto;
+  max-height: 500px;
+  object-fit: contain;
 }
 
 /* --- FIXED GAMEBOARD GRID --- */
@@ -371,7 +374,7 @@ header {
 /* --- Mobile adjustments --- */
 @media (max-width: 1024px) {
   .gameboard { width: 400px; height: 400px; }
-  .player img { width: 100px; }
+  .player img { max-width: 400px; }
 }
 
 @media (max-width: 768px) {
