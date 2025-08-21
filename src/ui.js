@@ -6,13 +6,15 @@ let currentOrientation = 'horizontal';
 let pickedShipName = null;
 let pickedShipLength = 0;
 let ghostShipCells = [];
+let lastGhostX = 0;
+let lastGhostY = 0;
 const CELL_SIZE = 50; // matches CSS grid
 
 // --- Orientation ---
 export function toggleOrientation(buttonEl = null) {
   currentOrientation = currentOrientation === 'horizontal' ? 'vertical' : 'horizontal';
   if (buttonEl) buttonEl.textContent = `Rotate: ${capitalize(currentOrientation)}`;
-  showMessage(`Orientation: ${capitalize(currentOrientation)}`, 1000);
+  showMessage(`Orientation: ${capitalize(currentOrientation)}`, 800);
   return currentOrientation;
 }
 
@@ -57,13 +59,14 @@ export function hideShipPreviewLabel() {
 }
 
 // --- Grid Rendering ---
-export function renderGrid(container, board) {
+export function renderGrid(container, board, showShips = true) {
   if (!container || !board) return;
   container.innerHTML = '';
   container.style.position = 'relative';
 
   for (let y = 0; y < board.length; y++) {
     for (let x = 0; x < board[y].length; x++) {
+      const cellData = board[y][x];
       const cell = document.createElement('div');
       cell.classList.add('cell');
       cell.dataset.x = x;
@@ -78,51 +81,21 @@ export function renderGrid(container, board) {
         left: `${x * CELL_SIZE}px`,
         top: `${y * CELL_SIZE}px`,
       });
+
+      if (cellData?.type === 'miss') {
+        cell.style.backgroundColor = 'white';
+      } else if (cellData?.type === 'ship' && cellData.ship.hits[cellData.index]) {
+        // this part of ship has been hit
+        cell.style.backgroundColor = 'red';
+      } else if (cellData?.type === 'ship' && showShips) {
+        // show intact ship tile
+        cell.style.backgroundColor = '#deb887';
+        cell.style.border = '2px solid #8b4513';
+      }
+
       container.appendChild(cell);
     }
   }
-
-  renderShips(container, board);
-}
-
-// --- Render all ships ---
-function renderShips(container, board) {
-  if (!container || !board) return;
-  const isEnemyGrid = container.id === 'enemy-grid';
-  board.forEach((row, y) => {
-    row.forEach((cellData, x) => {
-      if (cellData?.ship && cellData.ship.placed && cellData.ship.startX === x && cellData.ship.startY === y) {
-        if (isEnemyGrid) return;
-        renderShip(container, cellData.ship);
-      }
-    });
-  });
-}
-
-// --- Render a single ship ---
-export function renderShip(container, ship) {
-  if (!container || !ship) return;
-  const shipDiv = document.createElement('div');
-  shipDiv.classList.add('placed-ship');
-  shipDiv.style.position = 'absolute';
-  shipDiv.style.backgroundColor = '#deb887';
-  shipDiv.style.border = '2px solid #8b4513';
-  shipDiv.style.borderRadius = '4px';
-  shipDiv.style.zIndex = '5';
-
-  if (ship.orientation === 'horizontal') {
-    shipDiv.style.width = `${CELL_SIZE * ship.length}px`;
-    shipDiv.style.height = `${CELL_SIZE}px`;
-  } else {
-    shipDiv.style.width = `${CELL_SIZE}px`;
-    shipDiv.style.height = `${CELL_SIZE * ship.length}px`;
-  }
-
-  shipDiv.style.top = `${CELL_SIZE * ship.startY}px`;
-  shipDiv.style.left = `${CELL_SIZE * ship.startX}px`;
-  shipDiv.title = ship.name;
-
-  container.appendChild(shipDiv);
 }
 
 // --- Update individual cell ---
@@ -197,8 +170,9 @@ export function updateGhostShip(container, board, x, y, length, orientation, shi
   }
 
   ghostShipCells = tempCells;
+  lastGhostX = x;
+  lastGhostY = y;
 
-  // Position label exactly on first cell
   if (shipPreviewLabel && ghostShipCells.length > 0) {
     const top = y * CELL_SIZE;
     const left = x * CELL_SIZE;
@@ -269,12 +243,13 @@ export function initDragAndDrop(container, board, placeShipCallback) {
   container.addEventListener('click', placeHandler);
   container.addEventListener('touchend', e => { e.preventDefault(); placeHandler(e); });
 
-  // --- Rotation key ---
-  document.addEventListener('keydown', e => {
+  // --- Rotation key (toggle on single press) ---
+  document.addEventListener('keyup', e => {
     if (!pickedShipName) return;
     if (e.key.toLowerCase() === 'r') {
-      toggleOrientation();
-      moveHandler(e); // immediately update preview
+      currentOrientation = currentOrientation === 'horizontal' ? 'vertical' : 'horizontal';
+      updateGhostShip(container, board, lastGhostX, lastGhostY, pickedShipLength, currentOrientation, pickedShipName);
+      showMessage(`Orientation: ${capitalize(currentOrientation)}`, 800);
     }
   });
 }

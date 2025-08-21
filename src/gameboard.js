@@ -58,19 +58,26 @@ function createGameboard(size = 10) {
 
     if (!cell) {
       board[y][x] = { type: 'miss' };
-      return { result: 'miss' };
+      return { result: 'miss', x, y };
     }
 
     if (cell.type === 'miss' || (cell.type === 'ship' && cell.ship.hits[cell.index])) {
-      return 'already attacked';
+      return { result: 'already attacked', x, y };
     }
 
     if (cell.type === 'ship') {
       cell.ship.hit(cell.index);
-      return { result: 'hit', shipName: cell.ship.name || '' };
+      return { 
+        result: 'hit', 
+        shipName: cell.ship.name || '', 
+        x, 
+        y, 
+        index: cell.index, 
+        isSunk: cell.ship.isSunk() 
+      };
     }
 
-    return 'error';
+    return { result: 'error', x, y };
   }
 
   // Check if all ships are sunk

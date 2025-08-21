@@ -1,42 +1,28 @@
 // player.js
-import createShip from './ship';
+import createGameboard from './gameboard';
 
-function createPlayer(name) {
-  const ships = [];
-  const attacksReceived = [];
+function createPlayer(name, isComputer = false) {
+  const gameboard = createGameboard();
 
-  function placeShip(length, positions) {
-    if (!Array.isArray(positions) || positions.length !== length) {
-      throw new Error('Positions must match ship length');
-    }
-    const ship = createShip(length);
-    ships.push({ ship, positions });
-    return ship;
-  }
+  // For AI/computer: track possible moves
+  const attemptedAttacks = [];
 
-  function receiveAttack(position) {
-    attacksReceived.push(position);
-    for (const entry of ships) {
-      const index = entry.positions.indexOf(position);
-      if (index !== -1) {
-        entry.ship.hit(index);
-        return 'hit';
+  function attack(opponentBoard, x, y) {
+    if (isComputer) {
+      // Prevent repeat attacks
+      if (attemptedAttacks.some(pos => pos[0] === x && pos[1] === y)) {
+        return 'already attacked';
       }
+      attemptedAttacks.push([x, y]);
     }
-    return 'miss';
-  }
-
-  function allShipsSunk() {
-    return ships.every(entry => entry.ship.isSunk());
+    return opponentBoard.receiveAttack(x, y);
   }
 
   return {
     name,
-    ships,
-    attacksReceived,
-    placeShip,
-    receiveAttack,
-    allShipsSunk,
+    isComputer,
+    gameboard,
+    attack,
   };
 }
 
