@@ -82,14 +82,19 @@ export function renderGrid(container, board, showShips = true) {
         top: `${y * CELL_SIZE}px`,
       });
 
+      // --- Render cell state ---
       if (cellData?.type === 'miss') {
         cell.style.backgroundColor = 'white';
+        cell.classList.add('miss', 'attacked');
+        cell.style.pointerEvents = 'none';
       } else if (cellData?.type === 'ship' && cellData.ship.hits[cellData.index]) {
-        // this part of ship has been hit
-        cell.style.backgroundColor = 'red';
+        const sunk = typeof cellData.ship.isSunk === 'function' ? cellData.ship.isSunk() : false;
+        cell.style.backgroundColor = sunk ? '#8B0000' : 'red';
+        cell.classList.add('attacked');
+        if (sunk) cell.classList.add('sunk');
+        cell.style.pointerEvents = 'none';
       } else if (cellData?.type === 'ship' && showShips) {
-        // show intact ship tile
-        cell.style.backgroundColor = '#deb887';
+        cell.style.backgroundColor = '#deb887'; // intact ship
         cell.style.border = '2px solid #8b4513';
       }
 
@@ -98,24 +103,48 @@ export function renderGrid(container, board, showShips = true) {
   }
 }
 
-// --- Update individual cell ---
-export function updateCell(container, x, y, result) {
+// --- Update individual cell dynamically ---
+export function updateCell(container, x, y, result, isSunk = false) {
   if (!container) return;
-  const cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
-  if (!cell) return;
+
+  let cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
+  if (!cell) {
+    // Create cell if it wasn't previously rendered (shouldn't usually happen, but safe fallback)
+    cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.dataset.x = x;
+    cell.dataset.y = y;
+    Object.assign(cell.style, {
+      width: `${CELL_SIZE}px`,
+      height: `${CELL_SIZE}px`,
+      boxSizing: 'border-box',
+      border: '1px solid rgba(0,0,0,0.1)',
+      backgroundColor: 'transparent',
+      position: 'absolute',
+      left: `${x * CELL_SIZE}px`,
+      top: `${y * CELL_SIZE}px`,
+    });
+    container.appendChild(cell);
+  }
 
   if (result === 'hit') {
-    cell.style.backgroundColor = 'red';
-    cell.classList.add('hit');
-    setTimeout(() => cell.classList.remove('hit'), 200);
+    cell.style.backgroundColor = isSunk ? '#8B0000' : 'red';
+    if (isSunk) cell.classList.add('sunk');
   } else if (result === 'miss') {
     cell.style.backgroundColor = 'white';
     cell.classList.add('miss');
-    setTimeout(() => cell.classList.remove('miss'), 300);
+  } else if (result === 'already attacked') {
+    // Visual feedback if player clicked an already attacked cell
+    cell.style.transition = 'background-color 0.2s';
+    cell.style.backgroundColor = '#ccc';
+    setTimeout(() => { cell.style.backgroundColor = ''; }, 200);
   }
+
+  cell.classList.add('attacked');
+  cell.style.pointerEvents = 'none';
 }
 
-// --- Snap coordinates to grid ---
+// --- Ghost Ship Preview ---
 function getGridCoords(clientX, clientY, container, length, orientation, board) {
   const rect = container.getBoundingClientRect();
   let x = Math.floor((clientX - rect.left) / CELL_SIZE);
@@ -140,7 +169,6 @@ function getGridCoords(clientX, clientY, container, length, orientation, board) 
   return { x, y };
 }
 
-// --- Ghost Ship Preview ---
 export function updateGhostShip(container, board, x, y, length, orientation, shipName = '') {
   if (!container || !board) return false;
   clearGhostShip();
@@ -243,7 +271,6 @@ export function initDragAndDrop(container, board, placeShipCallback) {
   container.addEventListener('click', placeHandler);
   container.addEventListener('touchend', e => { e.preventDefault(); placeHandler(e); });
 
-  // --- Rotation key (toggle on single press) ---
   document.addEventListener('keyup', e => {
     if (!pickedShipName) return;
     if (e.key.toLowerCase() === 'r') {

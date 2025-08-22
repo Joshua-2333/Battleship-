@@ -10,34 +10,47 @@ function createShip(length, name = '') {
   let orientation = 'horizontal';
   let placed = false;
 
-  // Store coordinates of the ship’s cells after placement
+  // Coordinates of the ship’s cells after placement
   let coordinates = []; // e.g. [{x:0, y:0}, {x:1, y:0}, ...]
 
-  // Mark a specific segment of the ship as hit using (x, y)
-  function hit(x, y) {
+  /**
+   * Register a hit on the ship.
+   * Can use either:
+   *   - hit(index)        → hit by segment index
+   *   - hit(x, y)         → hit by board coordinates
+   */
+  function hit(indexOrX, y = null) {
     if (!placed) return;
 
-    const segmentIndex = coordinates.findIndex(
-      (coord) => coord.x === x && coord.y === y
-    );
-    if (segmentIndex !== -1) {
-      hits[segmentIndex] = true;
+    if (y === null) {
+      // Hit by segment index
+      if (indexOrX >= 0 && indexOrX < length) hits[indexOrX] = true;
+    } else {
+      // Hit by coordinates
+      const segmentIndex = coordinates.findIndex(
+        (coord) => coord.x === indexOrX && coord.y === y
+      );
+      if (segmentIndex !== -1) hits[segmentIndex] = true;
     }
   }
 
-  // Check if all segments of the ship are hit
+  /**
+   * Check if all segments of the ship have been hit
+   */
   function isSunk() {
     return hits.every((h) => h === true);
   }
 
-  // Set placement info when ship is positioned on board
+  /**
+   * Set placement info when the ship is positioned on the board
+   * Calculates all coordinates the ship occupies
+   */
   function setPlacement(x, y, dir) {
     startX = x;
     startY = y;
     orientation = dir;
     placed = true;
 
-    // Calculate all coordinates of the ship
     coordinates = [];
     for (let i = 0; i < length; i++) {
       if (dir === 'horizontal') {
@@ -50,9 +63,9 @@ function createShip(length, name = '') {
 
   return {
     length,
-    name,         // Ship name for UI and tracking
-    hits,         // Array of hits for each segment
-    hit,          // Function to register a hit by coordinates
+    name,         // Ship name for UI/tracking
+    hits,         // Array of hits per segment
+    hit,          // Function to register a hit
     isSunk,       // Function to check if sunk
     startX,
     startY,

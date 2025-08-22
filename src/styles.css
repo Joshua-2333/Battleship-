@@ -1,8 +1,8 @@
 /* --- Global Styles --- */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
@@ -32,7 +32,6 @@ header {
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 #logo:hover {
   transform: scale(1.1) rotate(-2deg);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -104,7 +103,6 @@ header {
   outline: none;
   transition: all 0.2s ease;
 }
-
 #player-name:focus {
   border-color: #5d2e0d;
   box-shadow: 0 0 5px rgba(0,0,0,0.5);
@@ -124,10 +122,7 @@ header {
   z-index: 2;
   transition: transform 0.2s ease;
 }
-
-#start-btn:hover {
-  transform: scale(1.05);
-}
+#start-btn:hover { transform: scale(1.05); }
 
 /* --- Game Screen --- */
 #game-screen {
@@ -148,7 +143,6 @@ header {
   width: 100%;
 }
 
-/* --- Player Layouts --- */
 .player {
   display: flex;
   flex-direction: row;
@@ -156,18 +150,9 @@ header {
   justify-content: center;
   gap: 10px;
 }
+.player1-battle { flex-direction: row; }
+.player2-battle { flex-direction: row-reverse; }
 
-/* Player 1 battle: image on left */
-.player1-battle {
-  flex-direction: row;
-}
-
-/* Player 2 battle: image on right of their grid */
-.player2-battle {
-  flex-direction: row-reverse;
-}
-
-/* Player images scale with gameboard (max 500x500) */
 .player img {
   width: 100%;
   max-width: 500px;
@@ -176,7 +161,7 @@ header {
   object-fit: contain;
 }
 
-/* --- FIXED GAMEBOARD GRID --- */
+/* --- Fixed Gameboard Grid --- */
 .gameboard {
   display: grid;
   grid-template-columns: repeat(10, 50px);
@@ -191,7 +176,7 @@ header {
   border: 2px solid #000;
 }
 
-/* Each cell */
+/* --- Each cell --- */
 .cell {
   width: 50px;
   height: 50px;
@@ -199,16 +184,17 @@ header {
   background-color: transparent;
   box-sizing: border-box;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
+.cell.attacked { cursor: not-allowed; opacity: 0.6; }
 
-/* --- Ship states --- */
+/* Ship placement preview */
 .cell.valid-preview {
   background-color: rgba(50,205,50,0.8) !important;
   animation: pulse-green 0.5s infinite alternate;
   border: 2px solid #32cd32;
   z-index: 15;
 }
-
 .cell.invalid-preview {
   background-color: rgba(255,99,71,0.8) !important;
   animation: pulse-red 0.5s infinite alternate;
@@ -216,17 +202,17 @@ header {
   z-index: 15;
 }
 
+/* --- Hit & Miss --- */
 .cell.hit {
   background-color: red !important;
   transform: scale(1.1) rotate(-5deg);
 }
-
 .cell.miss {
   background-color: white !important;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
-/* --- Placed ships --- */
+/* --- Placed Ships --- */
 .placed-ship {
   position: absolute;
   z-index: 10;
@@ -236,10 +222,8 @@ header {
   border-radius: 4px;
   pointer-events: none;
 }
-
 .placed-ship.horizontal { flex-direction: row; height: 50px; }
 .placed-ship.vertical { flex-direction: column; width: 50px; }
-
 .placed-ship .ship-cell {
   width: 50px;
   height: 50px;
@@ -248,7 +232,7 @@ header {
   border-radius: 4px;
 }
 
-/* --- Ship Dock & Draggable Ships --- */
+/* --- Ship Dock --- */
 #ship-dock {
   display: flex;
   flex-direction: row;
@@ -258,108 +242,41 @@ header {
   margin: 20px 0;
   flex-wrap: wrap;
 }
-
-.ship-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
+.ship-container { display: flex; flex-direction: row; align-items: center; gap: 10px; }
 .ship {
-  display: flex;
-  gap: 2px;
-  cursor: grab;
-  justify-content: center;
-  margin: 0;
+  display: flex; gap: 2px; cursor: grab; justify-content: center;
   transition: transform 0.2s ease;
 }
-
-.ship.dragging {
-  opacity: 0.8;
-  cursor: grabbing;
-  animation: pulse-drag 0.6s infinite alternate;
-}
-
+.ship.dragging { opacity: 0.8; cursor: grabbing; animation: pulse-drag 0.6s infinite alternate; }
 .ship-cell {
-  width: 40px;
-  height: 40px;
-  background-color: #deb887;
-  border: 2px solid #8b4513;
-  border-radius: 4px;
-  box-sizing: border-box;
+  width: 40px; height: 40px; background-color: #deb887; border: 2px solid #8b4513; border-radius: 4px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.ship-cell:hover {
-  transform: scale(1.05);
-}
-
-.ship:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-}
-
+.ship-cell:hover { transform: scale(1.05); }
+.ship:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.4); }
 .ship.horizontal { flex-direction: row; }
 .ship.vertical { flex-direction: column; }
 
 /* --- Controls --- */
 #controls {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  gap: 10px;
+  display: flex; justify-content: center; flex-wrap: wrap;
+  margin-top: 10px; gap: 10px;
 }
-
 #controls button {
-  margin: 5px;
-  padding: 8px 12px;
-  font-size: 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  background-color: #8b4513;
-  color: white;
-  border: none;
+  margin: 5px; padding: 8px 12px; font-size: 1rem; border-radius: 5px;
+  cursor: pointer; background-color: #8b4513; color: white; border: none;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
+#controls button:hover { background-color: #5d2e0d; transform: scale(1.05); }
+#controls button:disabled { background-color: #ccc; cursor: not-allowed; }
 
-#controls button:hover {
-  background-color: #5d2e0d;
-  transform: scale(1.05);
-}
-
-/* --- Orientation Wrapper & Rotate Indicator --- */
-.orientation-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-#rotate-indicator {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #3e2723;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  text-align: center;
-}
-
-/* --- Floating ship preview label --- */
+/* Orientation + Preview */
+.orientation-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#rotate-indicator { font-weight: bold; font-size: 1.1rem; color: #3e2723; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 #ship-preview-label {
-  position: absolute;
-  padding: 6px 12px;
-  background-color: rgba(50,205,50,0.95);
-  color: #fff;
-  font-weight: bold;
-  border-radius: 6px;
-  pointer-events: none;
-  z-index: 20;
-  transition: transform 0.1s ease, opacity 0.2s ease;
-  display: none;
-  white-space: nowrap;
-  font-size: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  position: absolute; padding: 6px 12px; background-color: rgba(50,205,50,0.95);
+  color: #fff; font-weight: bold; border-radius: 6px; pointer-events: none; z-index: 20;
+  display: none; white-space: nowrap; font-size: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
 .hidden { display: none !important; }
@@ -370,20 +287,29 @@ header {
 @keyframes pulse-drag { 0% { transform: scale(1.05) translateY(-2px); } 100% { transform: scale(1.08) translateY(-5px); } }
 @keyframes wiggle { 0% { transform: rotate(0deg); } 15% { transform: rotate(-10deg); } 30% { transform: rotate(10deg); } 45% { transform: rotate(-10deg); } 60% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
 .ship.invalid-drop { animation: wiggle 0.5s ease-in-out; }
+@keyframes blink-red {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: red; }
+}
 
-/* --- Mobile adjustments --- */
+.blinking-turn {
+  border: 3px solid red;
+  animation: blink-red 1s infinite;
+  box-sizing: border-box;
+}
+
+
+/* --- Mobile Adjustments --- */
 @media (max-width: 1024px) {
   .gameboard { width: 400px; height: 400px; }
   .player img { max-width: 400px; }
 }
-
 @media (max-width: 768px) {
   #players { flex-direction: column; align-items: center; gap: 20px; }
   .gameboard { width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; }
   #controls button { width: 80%; }
   .ship-cell { width: 32px; height: 32px; }
 }
-
 @media (max-width: 480px) {
   #logo { width: 60%; }
   #scroll-bg { max-width: 320px; width: 90%; }

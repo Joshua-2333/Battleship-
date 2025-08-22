@@ -1,12 +1,10 @@
 // game.js
 import createGameboard from './gameboard';
-import { updateCell } from './ui';
 
 export function createGame() {
   const playerBoard = createGameboard();
   const enemyBoard = createGameboard();
 
-  // Ship definitions
   const shipsInfo = [
     { length: 5, name: 'Carrier' },
     { length: 4, name: 'Battleship' },
@@ -15,39 +13,38 @@ export function createGame() {
     { length: 2, name: 'Destroyer' }
   ];
 
-  let placedShips = {}; // Tracks ships placed by player
+  let placedShips = {}; 
   let orientation = 'horizontal';
   let gameStarted = false;
+  let gameOver = false; 
 
-  // --- Enemy AI State ---
   const enemyMemory = {
-    attacks: new Set(),  // Stores attacked coordinates as 'x,y'
-    hits: [],            // Stack of hits to target adjacent cells
+    attacks: new Set(),
+    hits: [],
   };
 
-  // Toggle horizontal/vertical orientation
   function toggleOrientation() {
     orientation = orientation === 'horizontal' ? 'vertical' : 'horizontal';
     return orientation;
   }
 
-  // Place a ship on the player board by name
-  function placePlayerShipByName(shipName, x, y, shipOrientation = orientation) {
-    const shipInfo = shipsInfo.find(s => s.name.toLowerCase() === shipName.toLowerCase());
-    if (!shipInfo) return false;
-    if (placedShips[shipName]) return false;
+  function getPlayerName() {
+    const input = typeof document !== 'undefined' ? document.getElementById("player-name") : null;
+    return input && input.value.trim() ? input.value.trim() : "Sailor";
+  }
 
+  function placePlayerShipByName(shipName, x, y, shipOrientation = orientation) {
+    if (gameOver) return false;
+    const shipInfo = shipsInfo.find(s => s.name.toLowerCase() === shipName.toLowerCase());
+    if (!shipInfo || placedShips[shipName]) return false;
     const valid = playerBoard.isValidPlacement(shipInfo.length, x, y, shipOrientation);
     if (!valid) return false;
-
     const ship = playerBoard.placeShip(shipInfo.length, x, y, shipOrientation, shipName);
     if (!ship) return false;
-
     placedShips[shipName] = { x, y, orientation: shipOrientation };
     return true;
   }
 
-  // Randomly place enemy ships
   function placeEnemyShipsRandomly() {
     for (const { length, name } of shipsInfo) {
       let placed = false;
@@ -63,36 +60,33 @@ export function createGame() {
     }
   }
 
-  // Player attacks enemy
   function attackEnemy(x, y) {
-    const coordKey = `${x},${y}`;
-    if (enemyBoard.getCell(x, y)?.attacked) {
-      return { result: 'already attacked' };
-    }
-
+    if (gameOver) return { result: 'game over', x, y };
+    // Always delegate to receiveAttack to handle hit/miss logic
     const result = enemyBoard.receiveAttack(x, y);
-
-    return result.result === 'hit'
-      ? { result: 'hit', shipName: result.ship?.name, x, y }
-      : { result: 'miss', x, y };
+    if (enemyBoard.allShipsSunk()) {
+      gameOver = true;
+      result.gameOver = true;
+    }
+    return result;
   }
 
-  // --- Enemy AI attack ---
-  function computerAttack(playerContainer) {
+  function computerAttack() {
+    if (gameOver) return { result: 'game over' };
     const size = playerBoard.size;
-    let x, y, key, result;
+    let x, y, key;
 
     const getAdjacentTargets = (hx, hy) => {
       const adj = [
         [hx + 1, hy], [hx - 1, hy],
         [hx, hy + 1], [hx, hy - 1]
       ];
-      return adj.filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < size && ny < size)
-                .map(([nx, ny]) => `${nx},${ny}`)
-                .filter(k => !enemyMemory.attacks.has(k));
+      return adj
+        .filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < size && ny < size)
+        .map(([nx, ny]) => `${nx},${ny}`)
+        .filter(k => !enemyMemory.attacks.has(k));
     };
 
-    // If previous hits exist, target adjacent cells
     if (enemyMemory.hits.length > 0) {
       const lastHit = enemyMemory.hits[enemyMemory.hits.length - 1];
       const adjTargets = getAdjacentTargets(lastHit.x, lastHit.y);
@@ -101,8 +95,6 @@ export function createGame() {
         [x, y] = choice.split(',').map(Number);
       }
     }
-
-    // Otherwise pick random untried cell
     if (x === undefined || y === undefined) {
       do {
         x = Math.floor(Math.random() * size);
@@ -113,39 +105,31 @@ export function createGame() {
       key = `${x},${y}`;
     }
 
-    result = playerBoard.receiveAttack(x, y);
+    const result = playerBoard.receiveAttack(x, y);
     enemyMemory.attacks.add(key);
-
     if (result.result === 'hit') {
       enemyMemory.hits.push({ x, y });
     }
-
-    // If ship is sunk, clear its hit cells from memory
-    if (result.ship?.isSunk()) {
-      enemyMemory.hits = enemyMemory.hits.filter(
-        h => !result.ship.coordinates.some(p => p.x === h.x && p.y === h.y)
-      );
+    if (playerBoard.allShipsSunk()) {
+      gameOver = true;
+      result.gameOver = true;
     }
-
-    // Update UI directly for player grid
-    updateCell(playerContainer, x, y, result.result);
-
-    return { x, y, result: result.result };
+    return { x, y, ...result };
   }
 
-  // Start the game
   function startGame() {
     placeEnemyShipsRandomly();
     gameStarted = true;
+    gameOver = false;
   }
 
-  // Reset game
   function resetGame() {
     playerBoard.resetBoard();
     enemyBoard.resetBoard();
     placedShips = {};
     orientation = 'horizontal';
     gameStarted = false;
+    gameOver = false;
     enemyMemory.attacks.clear();
     enemyMemory.hits = [];
   }
@@ -155,13 +139,15 @@ export function createGame() {
     enemyBoard,
     shipsInfo,
     placedShips,
-    orientation,
-    gameStarted,
+    get gameStarted() { return gameStarted; },
+    get gameOver() { return gameOver; },
+
     toggleOrientation,
     placePlayerShipByName,
     attackEnemy,
     computerAttack,
     startGame,
     resetGame,
+    getPlayerName,
   };
 }

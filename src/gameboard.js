@@ -11,12 +11,12 @@ function createGameboard(size = 10) {
     if (x < 0 || y < 0 || x >= size || y >= size) return false;
 
     if (direction === 'horizontal') {
-      if (x + length > size) return false; // can't go past right edge
+      if (x + length > size) return false;
       for (let i = 0; i < length; i++) {
         if (board[y][x + i] !== null) return false;
       }
     } else { // vertical
-      if (y + length > size) return false; // can't go past bottom edge
+      if (y + length > size) return false;
       for (let i = 0; i < length; i++) {
         if (board[y + i][x] !== null) return false;
       }
@@ -33,7 +33,7 @@ function createGameboard(size = 10) {
 
     const ship = createShip(length, name);
 
-    // Add UI properties
+    // Set placement info on ship
     ship.startX = x;
     ship.startY = y;
     ship.orientation = direction;
@@ -52,37 +52,41 @@ function createGameboard(size = 10) {
 
   // Receive attack at x, y
   function receiveAttack(x, y) {
-    if (x < 0 || x >= size || y < 0 || y >= size) return 'invalid';
+    if (x < 0 || x >= size || y < 0 || y >= size) 
+      return { result: 'invalid', x, y, gameOver: allShipsSunk() };
 
     const cell = board[y][x];
 
     if (!cell) {
       board[y][x] = { type: 'miss' };
-      return { result: 'miss', x, y };
+      return { result: 'miss', x, y, gameOver: allShipsSunk() };
     }
 
     if (cell.type === 'miss' || (cell.type === 'ship' && cell.ship.hits[cell.index])) {
-      return { result: 'already attacked', x, y };
+      return { result: 'already attacked', x, y, gameOver: allShipsSunk() };
     }
 
     if (cell.type === 'ship') {
       cell.ship.hit(cell.index);
+      const sunk = cell.ship.isSunk();
+      const gameOver = allShipsSunk();
       return { 
         result: 'hit', 
         shipName: cell.ship.name || '', 
         x, 
         y, 
         index: cell.index, 
-        isSunk: cell.ship.isSunk() 
+        isSunk: sunk,
+        gameOver 
       };
     }
 
-    return { result: 'error', x, y };
+    return { result: 'error', x, y, gameOver: allShipsSunk() };
   }
 
   // Check if all ships are sunk
   function allShipsSunk() {
-    return ships.every(entry => entry.ship.isSunk());
+    return ships.length > 0 && ships.every(entry => entry.ship.isSunk());
   }
 
   // Get the cell at coordinates
