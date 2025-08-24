@@ -1,5 +1,5 @@
 // gameOver.js
-import { showMessage, toggleScreen } from './ui';
+import { toggleScreen } from './ui';
 import { battleMusic } from './dom';
 
 /**
@@ -8,36 +8,15 @@ import { battleMusic } from './dom';
  * @returns {boolean} true if game ended, false otherwise
  */
 export function checkGameOver(game) {
-  if (!game) return false;
+  if (!game.gameStarted || game.gameOver) return false;
 
-  // Guard to prevent repeated triggers
-  if (window.gameOverHandled) return false;
+  let winner = null;
+  if (game.playerBoard.allShipsSunk()) winner = 'enemy';
+  else if (game.enemyBoard.allShipsSunk()) winner = 'player';
 
-  // Player lost
-  if (game.playerBoard.allShipsSunk()) {
-    game.gameOver = true;           // Set gameOver flag
-    handleGameOver('You lost! All your ships were sunk.');
-    return true;
-  }
+  if (!winner) return false;
 
-  // Player won
-  if (game.enemyBoard.allShipsSunk()) {
-    game.gameOver = true;           // Set gameOver flag
-    handleGameOver('You win! All enemy ships were sunk.');
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Handles all end-of-game actions: stops music, shows UI message/modal.
- * @param {string} message - Message to display on game over
- */
-function handleGameOver(message) {
-  // Prevent multiple executions
-  if (window.gameOverHandled) return;
-  window.gameOverHandled = true;
+  game.gameOver = true;
 
   // Stop battle music safely
   if (battleMusic && typeof battleMusic.pause === 'function') {
@@ -49,16 +28,43 @@ function handleGameOver(message) {
     }
   }
 
-  // Show message
-  showMessage(message, 3000);
+  // Show game-over modal
+  const modal = document.getElementById('game-over-modal');
+  const title = document.getElementById('game-over-title');
+  const restartBtn = document.getElementById('game-over-restart');
+  const battleScreen = document.getElementById('battle-screen');
 
-  // Display a "game over" modal or screen
-  toggleScreen('game-over'); // Make sure your HTML has an element with this ID
-}
+  if (!modal || !title || !restartBtn) {
+    console.warn('Game over modal elements are missing in HTML!');
+    return true;
+  }
 
-/**
- * Resets the game-over flag (call this in game.resetGame())
- */
-export function resetGameOverFlag() {
-  window.gameOverHandled = false;
+  // Hide the battle screen while modal is visible
+  if (battleScreen) battleScreen.classList.add('hidden');
+
+  // Get player name from input
+  const playerNameInput = document.getElementById('player-name');
+  const playerName = playerNameInput ? playerNameInput.value.trim() || 'Captain' : 'Captain';
+
+  // Set winner message dynamically
+  if (winner === 'player') {
+    title.textContent = `🎉 Congrats ${playerName}! You sunk BlackBeard's fleet!`;
+  } else {
+    title.textContent = `💀 BlackBeard sunk Captain ${playerName}'s fleet! Better luck next time!`;
+  }
+
+  modal.classList.remove('hidden');
+
+  // Restart button logic
+  restartBtn.onclick = () => {
+    modal.classList.add('hidden');
+    if (battleScreen) battleScreen.classList.add('hidden'); // keep hidden until setup
+    toggleScreen('intro');
+    game.resetGame();
+    game.placedShips = {};
+    window.gameOverHandled = false;
+    if (playerNameInput) playerNameInput.value = '';
+  };
+
+  return true;
 }

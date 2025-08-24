@@ -133,6 +133,23 @@ header {
   padding: 20px;
 }
 
+/* --- Setup Wrapper for Mobile Scroll --- */
+.setup-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+#ship-dock-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* Player / Battle Layout */
 #players {
   display: flex;
@@ -174,6 +191,41 @@ header {
   background-position: center;
   position: relative;
   border: 2px solid #000;
+}
+
+/* ---game-over--*/
+#game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+#game-over-content {
+  text-align: center;
+  color: white;
+  font-family: 'Georgia', serif;
+}
+
+#game-over-title {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+#game-over-restart {
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  border: none;
+  background-color: #32cd32;
+  color: white;
 }
 
 /* --- Each cell --- */
@@ -298,27 +350,161 @@ header {
   box-sizing: border-box;
 }
 
-
 /* --- Mobile Adjustments --- */
-@media (max-width: 1024px) {
-  .gameboard { width: 400px; height: 400px; }
-  .player img { max-width: 400px; }
-}
 @media (max-width: 768px) {
-  #players { flex-direction: column; align-items: center; gap: 20px; }
-  .gameboard { width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; }
-  #controls button { width: 80%; }
-  .ship-cell { width: 32px; height: 32px; }
+  #players {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .player img {
+    width: 90vw;
+    max-width: 400px;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .gameboard {
+    width: 90vw;
+    max-width: 400px;
+    height: auto;
+    aspect-ratio: 1/1;
+    display: grid;
+    grid-template-columns: repeat(10, 10%);
+    grid-template-rows: repeat(10, 10%);
+  }
+
+  .cell {
+    width: 10%;
+    height: 10%;
+    border-width: 1px;
+    box-sizing: border-box;
+  }
+
+  .placed-ship {
+    position: absolute;
+    z-index: 10;
+    display: flex;
+    pointer-events: none;
+  }
+  .placed-ship.horizontal { height: 10%; }
+  .placed-ship.vertical { width: 10%; flex-direction: column; }
+  .placed-ship .ship-cell {
+    width: 10%;
+    height: 10%;
+  }
+
+  #setup-screen {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  #ship-dock {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .ship-container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .ship {
+    flex-shrink: 0;
+  }
+
+  .ship-cell {
+    width: 28px;
+    height: 28px;
+  }
+
+  #controls {
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    gap: 8px;
+  }
+
+  #controls button {
+    width: 100%;
+    max-width: 250px;
+    margin: 4px 0;
+  }
 }
+
 @media (max-width: 480px) {
-  #logo { width: 60%; }
-  #scroll-bg { max-width: 320px; width: 90%; }
-  #intro-content { max-width: 240px; }
-  #player-name { font-size: 0.9rem; padding: 6px 8px; max-width: 200px; }
-  #start-btn { width: 120px; height: 50px; }
-  #ship-preview-label { font-size: 0.8rem; padding: 4px 8px; }
-  #controls { flex-direction: column; }
-  #controls button { width: 90%; margin: 4px 0; }
-  #ship-dock { flex-direction: column; align-items: center; gap: 8px; }
-  .ship-cell { width: 24px; height: 24px; }
+  #players {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .player img {
+    width: 90vw;
+    max-width: 250px;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .gameboard {
+    width: 90vw;
+    max-width: 250px;
+    height: auto;
+    aspect-ratio: 1/1;
+    display: grid;
+    grid-template-columns: repeat(10, 10%);
+    grid-template-rows: repeat(10, 10%);
+  }
+
+  .cell {
+    width: 10%;
+    height: 10%;
+    border-width: 1px;
+    box-sizing: border-box;
+  }
+
+  .placed-ship.horizontal { height: 10%; }
+  .placed-ship.vertical { width: 10%; flex-direction: column; }
+  .placed-ship .ship-cell {
+    width: 10%;
+    height: 10%;
+  }
+
+  .ship-cell {
+    width: 22px;
+    height: 22px;
+  }
+
+  #ship-dock {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .ship-container {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  #controls {
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    gap: 6px;
+  }
+
+  #controls button {
+    width: 100%;
+    max-width: 220px;
+    margin: 3px 0;
+  }
 }

@@ -8,7 +8,6 @@ let pickedShipLength = 0;
 let ghostShipCells = [];
 let lastGhostX = 0;
 let lastGhostY = 0;
-const CELL_SIZE = 50; // matches CSS grid
 
 // --- Orientation ---
 export function toggleOrientation(buttonEl = null) {
@@ -58,11 +57,23 @@ export function hideShipPreviewLabel() {
   if (shipPreviewLabel) shipPreviewLabel.style.display = 'none';
 }
 
+// --- Dynamic Cell Size Helper ---
+function getCellSize(container, board) {
+  if (!container || !board) return 50; // fallback
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+  const cols = board[0].length;
+  const rows = board.length;
+  return Math.floor(Math.min(containerWidth / cols, containerHeight / rows));
+}
+
 // --- Grid Rendering ---
-export function renderGrid(container, board, showShips = true) {
+export function renderGrid(container, board, showShips = true, hideShips = false) {
   if (!container || !board) return;
-  container.innerHTML = ''; // clear duplicates
+  container.innerHTML = ''; 
   container.style.position = 'relative';
+
+  const CELL_SIZE = getCellSize(container, board);
 
   for (let y = 0; y < board.length; y++) {
     for (let x = 0; x < board[y].length; x++) {
@@ -71,6 +82,7 @@ export function renderGrid(container, board, showShips = true) {
       cell.classList.add('cell');
       cell.dataset.x = x;
       cell.dataset.y = y;
+
       Object.assign(cell.style, {
         width: `${CELL_SIZE}px`,
         height: `${CELL_SIZE}px`,
@@ -82,7 +94,6 @@ export function renderGrid(container, board, showShips = true) {
         top: `${y * CELL_SIZE}px`,
       });
 
-      // --- Render cell state ---
       if (cellData?.type === 'miss') {
         cell.style.backgroundColor = 'white';
         cell.classList.add('miss', 'attacked');
@@ -93,8 +104,8 @@ export function renderGrid(container, board, showShips = true) {
         cell.classList.add('attacked');
         if (sunk) cell.classList.add('sunk');
         cell.style.pointerEvents = 'none';
-      } else if (cellData?.type === 'ship' && showShips) {
-        cell.style.backgroundColor = '#deb887'; // intact ship
+      } else if (cellData?.type === 'ship' && showShips && !hideShips) {
+        cell.style.backgroundColor = '#deb887';
         cell.style.border = '2px solid #8b4513';
       }
 
@@ -107,7 +118,6 @@ export function renderGrid(container, board, showShips = true) {
 export function updateCell(container, x, y, result, isSunk = false) {
   if (!container) return;
 
-  // ✅ Only update existing cells; do not create new divs
   const cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
   if (!cell) return;
 
@@ -118,7 +128,6 @@ export function updateCell(container, x, y, result, isSunk = false) {
     cell.style.backgroundColor = 'white';
     cell.classList.add('miss');
   } else if (result === 'already attacked') {
-    // Visual feedback if player clicked an already attacked cell
     cell.style.transition = 'background-color 0.2s';
     cell.style.backgroundColor = '#ccc';
     setTimeout(() => { cell.style.backgroundColor = ''; }, 200);
@@ -130,6 +139,7 @@ export function updateCell(container, x, y, result, isSunk = false) {
 
 // --- Ghost Ship Preview ---
 function getGridCoords(clientX, clientY, container, length, orientation, board) {
+  const CELL_SIZE = getCellSize(container, board);
   const rect = container.getBoundingClientRect();
   let x = Math.floor((clientX - rect.left) / CELL_SIZE);
   let y = Math.floor((clientY - rect.top) / CELL_SIZE);
@@ -158,6 +168,7 @@ export function updateGhostShip(container, board, x, y, length, orientation, shi
   clearGhostShip();
   let valid = true;
   const tempCells = [];
+  const CELL_SIZE = getCellSize(container, board);
 
   for (let i = 0; i < length; i++) {
     const hx = orientation === 'horizontal' ? x + i : x;
@@ -217,8 +228,8 @@ export function initDragAndDrop(container, board, placeShipCallback) {
 
   const moveHandler = e => {
     if (!pickedShipName) return;
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const clientX = e?.clientX ?? (e?.touches?.[0]?.clientX) ?? (e?.changedTouches?.[0]?.clientX);
+    const clientY = e?.clientY ?? (e?.touches?.[0]?.clientY) ?? (e?.changedTouches?.[0]?.clientY);
     const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation, board);
     updateGhostShip(container, board, x, y, pickedShipLength, currentOrientation, pickedShipName);
   };
@@ -228,8 +239,8 @@ export function initDragAndDrop(container, board, placeShipCallback) {
 
   const placeHandler = e => {
     if (!pickedShipName) return;
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const clientX = e?.clientX ?? (e?.touches?.[0]?.clientX) ?? (e?.changedTouches?.[0]?.clientX);
+    const clientY = e?.clientY ?? (e?.touches?.[0]?.clientY) ?? (e?.changedTouches?.[0]?.clientY);
     const { x, y } = getGridCoords(clientX, clientY, container, pickedShipLength, currentOrientation, board);
 
     const valid = updateGhostShip(container, board, x, y, pickedShipLength, currentOrientation, pickedShipName);
