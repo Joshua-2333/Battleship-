@@ -61,7 +61,7 @@ export function hideShipPreviewLabel() {
 // --- Grid Rendering ---
 export function renderGrid(container, board, showShips = true) {
   if (!container || !board) return;
-  container.innerHTML = '';
+  container.innerHTML = ''; // clear duplicates
   container.style.position = 'relative';
 
   for (let y = 0; y < board.length; y++) {
@@ -107,25 +107,9 @@ export function renderGrid(container, board, showShips = true) {
 export function updateCell(container, x, y, result, isSunk = false) {
   if (!container) return;
 
-  let cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
-  if (!cell) {
-    // Create cell if it wasn't previously rendered (shouldn't usually happen, but safe fallback)
-    cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.dataset.x = x;
-    cell.dataset.y = y;
-    Object.assign(cell.style, {
-      width: `${CELL_SIZE}px`,
-      height: `${CELL_SIZE}px`,
-      boxSizing: 'border-box',
-      border: '1px solid rgba(0,0,0,0.1)',
-      backgroundColor: 'transparent',
-      position: 'absolute',
-      left: `${x * CELL_SIZE}px`,
-      top: `${y * CELL_SIZE}px`,
-    });
-    container.appendChild(cell);
-  }
+  // ✅ Only update existing cells; do not create new divs
+  const cell = container.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
+  if (!cell) return;
 
   if (result === 'hit') {
     cell.style.backgroundColor = isSunk ? '#8B0000' : 'red';

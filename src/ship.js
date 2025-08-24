@@ -1,4 +1,3 @@
-// ship.js
 function createShip(length, name = '') {
   if (length <= 0) throw new Error('Ship length must be greater than 0');
 
@@ -23,10 +22,8 @@ function createShip(length, name = '') {
     if (!placed) return;
 
     if (y === null) {
-      // Hit by segment index
       if (indexOrX >= 0 && indexOrX < length) hits[indexOrX] = true;
     } else {
-      // Hit by coordinates
       const segmentIndex = coordinates.findIndex(
         (coord) => coord.x === indexOrX && coord.y === y
       );
@@ -43,7 +40,6 @@ function createShip(length, name = '') {
 
   /**
    * Set placement info when the ship is positioned on the board
-   * Calculates all coordinates the ship occupies
    */
   function setPlacement(x, y, dir) {
     startX = x;
@@ -53,26 +49,23 @@ function createShip(length, name = '') {
 
     coordinates = [];
     for (let i = 0; i < length; i++) {
-      if (dir === 'horizontal') {
-        coordinates.push({ x: x + i, y });
-      } else {
-        coordinates.push({ x, y: y + i });
-      }
+      if (dir === 'horizontal') coordinates.push({ x: x + i, y });
+      else coordinates.push({ x, y: y + i });
     }
   }
 
   return {
     length,
-    name,         // Ship name for UI/tracking
-    hits,         // Array of hits per segment
-    hit,          // Function to register a hit
-    isSunk,       // Function to check if sunk
-    startX,
-    startY,
-    orientation,
-    placed,
-    coordinates,  // List of occupied cells
-    setPlacement, // Call when ship is placed on board
+    name,
+    hits,
+    hit,
+    isSunk,
+    setPlacement,
+    get startX() { return startX; },
+    get startY() { return startY; },
+    get orientation() { return orientation; },
+    get placed() { return placed; },
+    get coordinates() { return coordinates; },
   };
 }
 

@@ -2,11 +2,10 @@
 import createShip from './ship';
 
 function createGameboard(size = 10) {
-  // 2D board array: null = empty, {type, ship?, index?} = occupied/attacked
   const board = Array.from({ length: size }, () => Array(size).fill(null));
   const ships = [];
+  const misses = [];
 
-  // Check if a ship placement is valid
   function isValidPlacement(length, x, y, direction) {
     if (x < 0 || y < 0 || x >= size || y >= size) return false;
 
@@ -15,7 +14,7 @@ function createGameboard(size = 10) {
       for (let i = 0; i < length; i++) {
         if (board[y][x + i] !== null) return false;
       }
-    } else { // vertical
+    } else {
       if (y + length > size) return false;
       for (let i = 0; i < length; i++) {
         if (board[y + i][x] !== null) return false;
@@ -24,7 +23,6 @@ function createGameboard(size = 10) {
     return true;
   }
 
-  // Place a ship on the board
   function placeShip(length, x, y, direction = 'horizontal', name = '') {
     if (!isValidPlacement(length, x, y, direction)) {
       console.warn(`Invalid placement for ship "${name}" at (${x}, ${y}) direction: ${direction}`);
@@ -32,17 +30,12 @@ function createGameboard(size = 10) {
     }
 
     const ship = createShip(length, name);
-
-    // Set placement info on ship
-    ship.startX = x;
-    ship.startY = y;
-    ship.orientation = direction;
-    ship.placed = true;
+    ship.setPlacement(x, y, direction);
 
     const positions = [];
     for (let i = 0; i < length; i++) {
-      const pos = direction === 'horizontal' ? [x + i, y] : [x, y + i];
-      board[pos[1]][pos[0]] = { type: 'ship', ship, index: i };
+      const pos = direction === 'horizontal' ? { x: x + i, y } : { x, y: y + i };
+      board[pos.y][pos.x] = { type: 'ship', ship, index: i };
       positions.push(pos);
     }
 
@@ -50,7 +43,6 @@ function createGameboard(size = 10) {
     return ship;
   }
 
-  // Receive attack at x, y
   function receiveAttack(x, y) {
     if (x < 0 || x >= size || y < 0 || y >= size) 
       return { result: 'invalid', x, y, gameOver: allShipsSunk() };
@@ -59,55 +51,55 @@ function createGameboard(size = 10) {
 
     if (!cell) {
       board[y][x] = { type: 'miss' };
+      misses.push({ x, y });
       return { result: 'miss', x, y, gameOver: allShipsSunk() };
     }
 
-    if (cell.type === 'miss' || (cell.type === 'ship' && cell.ship.hits[cell.index])) {
+    if (cell.type === 'miss') {
       return { result: 'already attacked', x, y, gameOver: allShipsSunk() };
     }
 
     if (cell.type === 'ship') {
+      // Use ship.hit() instead of hitsCount
+      if (!cell.ship.placed) return { result: 'error', x, y, gameOver: allShipsSunk() };
+
       cell.ship.hit(cell.index);
       const sunk = cell.ship.isSunk();
-      const gameOver = allShipsSunk();
+
       return { 
         result: 'hit', 
-        shipName: cell.ship.name || '', 
+        shipName: cell.ship.name, 
         x, 
         y, 
-        index: cell.index, 
         isSunk: sunk,
-        gameOver 
+        gameOver: allShipsSunk() 
       };
     }
 
     return { result: 'error', x, y, gameOver: allShipsSunk() };
   }
 
-  // Check if all ships are sunk
   function allShipsSunk() {
     return ships.length > 0 && ships.every(entry => entry.ship.isSunk());
   }
 
-  // Get the cell at coordinates
   function getCell(x, y) {
     if (x < 0 || x >= size || y < 0 || y >= size) return null;
     return board[y][x];
   }
 
-  // Reset the board
   function resetBoard() {
     for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        board[y][x] = null;
-      }
+      for (let x = 0; x < size; x++) board[y][x] = null;
     }
     ships.length = 0;
+    misses.length = 0;
   }
 
   return {
     board,
     ships,
+    misses,
     size,
     placeShip,
     receiveAttack,

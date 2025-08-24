@@ -9,7 +9,8 @@ import battleSong from './sfx/battleSong.mp3';
 import hitSoundFile from './sfx/hitSound.mp3';
 import missSoundFile from './sfx/missSound.mp3';
 
-// Sounds
+// --- Audio elements (exported directly for Option 1) ---
+export const battleMusic = new Audio(battleSong);
 export const hitSound = new Audio(hitSoundFile);
 export const missSound = new Audio(missSoundFile);
 
@@ -37,9 +38,8 @@ export const getOrientationBtn = () => document.getElementById('orientation-btn'
 export const getConfirmBtn = () => document.getElementById('confirm-btn');
 export const getResetBtn = () => document.getElementById('reset-btn');
 export const getControls = () => document.getElementById('controls');
-export const getBattleMusic = () => document.getElementById('battle-music');
 
-// --- Update images once DOM is ready ---
+// --- Initialize images once DOM is ready ---
 document.addEventListener('DOMContentLoaded', () => {
   const logo = getLogo();
   const scrollBg = getScrollBg();
@@ -47,12 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const player1BattleImg = getPlayer1BattleImg();
   const player2Img = getPlayer2Img();
   const startBtn = getStartBtn();
-  const musicEl = getBattleMusic();
 
   if (logo) logo.src = logoImg;
   if (scrollBg) scrollBg.src = scrollBgImg;
 
-  // Apply the same player 1 image to setup and battle screens
   if (player1SetupImg) player1SetupImg.src = player1ImgFile;
   if (player1BattleImg) player1BattleImg.src = player1ImgFile;
 
@@ -63,6 +61,4 @@ document.addEventListener('DOMContentLoaded', () => {
     startBtn.setAttribute('aria-label', 'Start Game');
     startBtn.disabled = true;
   }
-
-  if (musicEl) musicEl.src = battleSong;
 });

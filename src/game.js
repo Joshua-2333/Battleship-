@@ -1,5 +1,6 @@
 // game.js
 import createGameboard from './gameboard';
+import { checkGameOver } from './gameOver';
 
 export function createGame() {
   const playerBoard = createGameboard();
@@ -13,14 +14,31 @@ export function createGame() {
     { length: 2, name: 'Destroyer' }
   ];
 
-  let placedShips = {}; 
+  let placedShips = {};
   let orientation = 'horizontal';
   let gameStarted = false;
-  let gameOver = false; 
+  let _gameOver = false; // Internal state
 
   const enemyMemory = {
     attacks: new Set(),
     hits: [],
+  };
+
+  const gameAPI = {
+    playerBoard,
+    enemyBoard,
+    shipsInfo,
+    placedShips,
+    get gameStarted() { return gameStarted; },
+    get gameOver() { return _gameOver; },
+    set gameOver(value) { _gameOver = value; },
+    toggleOrientation,
+    placePlayerShipByName,
+    attackEnemy,
+    computerAttack,
+    startGame,
+    resetGame,
+    getPlayerName,
   };
 
   function toggleOrientation() {
@@ -34,7 +52,7 @@ export function createGame() {
   }
 
   function placePlayerShipByName(shipName, x, y, shipOrientation = orientation) {
-    if (gameOver) return false;
+    if (_gameOver) return false;
     const shipInfo = shipsInfo.find(s => s.name.toLowerCase() === shipName.toLowerCase());
     if (!shipInfo || placedShips[shipName]) return false;
     const valid = playerBoard.isValidPlacement(shipInfo.length, x, y, shipOrientation);
@@ -61,18 +79,15 @@ export function createGame() {
   }
 
   function attackEnemy(x, y) {
-    if (gameOver) return { result: 'game over', x, y };
-    // Always delegate to receiveAttack to handle hit/miss logic
+    if (_gameOver) return { result: 'game over', x, y };
+
     const result = enemyBoard.receiveAttack(x, y);
-    if (enemyBoard.allShipsSunk()) {
-      gameOver = true;
-      result.gameOver = true;
-    }
+    checkGameOver(gameAPI);
     return result;
   }
 
   function computerAttack() {
-    if (gameOver) return { result: 'game over' };
+    if (_gameOver) return { result: 'game over' };
     const size = playerBoard.size;
     let x, y, key;
 
@@ -87,6 +102,13 @@ export function createGame() {
         .filter(k => !enemyMemory.attacks.has(k));
     };
 
+    // Remove hits of sunk ships from memory
+    enemyMemory.hits = enemyMemory.hits.filter(h => {
+      const cell = playerBoard.getCell(h.x, h.y);
+      return cell && cell.type === 'ship' && !cell.ship.isSunk();
+    });
+
+    // Target adjacent cells of last unsunk hit
     if (enemyMemory.hits.length > 0) {
       const lastHit = enemyMemory.hits[enemyMemory.hits.length - 1];
       const adjTargets = getAdjacentTargets(lastHit.x, lastHit.y);
@@ -95,6 +117,8 @@ export function createGame() {
         [x, y] = choice.split(',').map(Number);
       }
     }
+
+    // If no adjacent target, pick a random untried cell
     if (x === undefined || y === undefined) {
       do {
         x = Math.floor(Math.random() * size);
@@ -107,20 +131,20 @@ export function createGame() {
 
     const result = playerBoard.receiveAttack(x, y);
     enemyMemory.attacks.add(key);
-    if (result.result === 'hit') {
+
+    // Only remember hits for unsunk ships
+    if (result.result === 'hit' && !result.isSunk) {
       enemyMemory.hits.push({ x, y });
     }
-    if (playerBoard.allShipsSunk()) {
-      gameOver = true;
-      result.gameOver = true;
-    }
+
+    checkGameOver(gameAPI);
     return { x, y, ...result };
   }
 
   function startGame() {
     placeEnemyShipsRandomly();
     gameStarted = true;
-    gameOver = false;
+    _gameOver = false;
   }
 
   function resetGame() {
@@ -129,25 +153,10 @@ export function createGame() {
     placedShips = {};
     orientation = 'horizontal';
     gameStarted = false;
-    gameOver = false;
+    _gameOver = false;
     enemyMemory.attacks.clear();
     enemyMemory.hits = [];
   }
 
-  return {
-    playerBoard,
-    enemyBoard,
-    shipsInfo,
-    placedShips,
-    get gameStarted() { return gameStarted; },
-    get gameOver() { return gameOver; },
-
-    toggleOrientation,
-    placePlayerShipByName,
-    attackEnemy,
-    computerAttack,
-    startGame,
-    resetGame,
-    getPlayerName,
-  };
+  return gameAPI;
 }

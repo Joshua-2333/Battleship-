@@ -18,6 +18,7 @@
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.4",
     "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
     "style-loader": "^4.0.0",
     "webpack": "^5.101.2",
     "webpack-cli": "^6.0.1",
@@ -26,6 +27,11 @@
   "jest": {
     "transform": {
       "^.+\\.js$": "babel-jest"
+    },
+    "testEnvironment": "jsdom",
+    "setupFiles": ["<rootDir>/tests/__mocks__/jest.setup.js"],
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|mp3|svg)$": "<rootDir>/tests/__mocks__/fileMock.js"
     }
   }
 }

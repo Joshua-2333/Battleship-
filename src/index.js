@@ -7,11 +7,12 @@ import {
 import { 
   getLogo, getStartBtn, getPlayerNameInput, getPlayerGridContainer,
   getBattlePlayerGridContainer, getEnemyGridContainer,
-  getOrientationBtn, getConfirmBtn, getResetBtn, getControls, getBattleMusic,
-  hitSound, missSound
+  getOrientationBtn, getConfirmBtn, getResetBtn, getControls,
+  battleMusic, hitSound, missSound
 } from './dom';
+import { checkGameOver } from './gameOver'; 
 
-// Grab elements
+// --- Grab DOM elements ---
 const logo = getLogo();
 const startBtn = getStartBtn();
 const playerNameInput = getPlayerNameInput();
@@ -22,13 +23,12 @@ const orientationBtn = getOrientationBtn();
 const confirmBtn = getConfirmBtn();
 const resetBtn = getResetBtn();
 const controls = getControls();
-const battleMusic = getBattleMusic();
 
-// Initialize game and UI
+// --- Initialize game ---
 const game = createGame();
 createShipPreviewLabel();
 
-// Render initial grids
+// --- Render initial grids ---
 renderGrid(playerGridContainer, game.playerBoard.board);
 renderGrid(battlePlayerGridContainer, game.playerBoard.board);
 renderGrid(enemyGridContainer, game.enemyBoard.board);
@@ -91,30 +91,6 @@ playerNameInput.addEventListener('input', () => {
 // --- Orientation toggle ---
 orientationBtn.addEventListener('click', () => toggleOrientation(orientationBtn));
 
-// --- Game over modal ---
-function showGameOverModal(playerLost) {
-  const modal = document.getElementById('game-over-modal');
-  const message = document.getElementById('game-over-message');
-  message.textContent = playerLost
-    ? 'You lost! Your fleet has been destroyed! ☠️'
-    : 'You won! All enemy ships sunk! 🎉';
-  modal.style.display = 'block';
-  playerTurn = false;
-  updateTurnIndicator();
-  gameOverCleanup();
-}
-
-function gameOverCleanup() {
-  enemyGridContainer.style.pointerEvents = 'none';
-}
-
-// Close modal
-document.getElementById('game-over-modal').addEventListener('click', e => {
-  if (e.target.classList.contains('close') || e.target.classList.contains('modal')) {
-    e.currentTarget.style.display = 'none';
-  }
-});
-
 // --- Enemy attack ---
 function enemyAttack() {
   if (!game.gameStarted || game.gameOver) return;
@@ -126,6 +102,7 @@ function enemyAttack() {
     return; 
   }
 
+  // ✅ Update existing cells only
   updateCell(battlePlayerGridContainer, result.x, result.y, result.result, result.isSunk);
 
   if (result.result === 'hit') {
@@ -138,15 +115,13 @@ function enemyAttack() {
         showMessage(`The enemy sunk your ${result.shipName}! ☠️`);
       }
     }
-  } else if (result.result === 'miss') {
+  } else {
     missSound.currentTime = 0; missSound.play();
     showMessage('Enemy missed!');
   }
 
-  if (result.gameOver || game.playerBoard.allShipsSunk()) { 
-    showGameOverModal(true); 
-    return; 
-  }
+  if (checkGameOver(game)) return;
+
   playerTurn = true;
   updateTurnIndicator();
 }
@@ -164,29 +139,26 @@ function handleEnemyClick(e) {
   const y = +cell.dataset.y;
   const result = game.attackEnemy(x, y);
 
-  cell.classList.add('attacked');
+  // ✅ Update only existing cell
+  updateCell(enemyGridContainer, x, y, result.result, result.isSunk);
 
   if (result.result === 'hit') {
-    updateCell(enemyGridContainer, x, y, 'hit', !!result.isSunk);
     hitSound.currentTime = 0; hitSound.play();
-    showMessage(result.shipName ? `Hit! ${result.shipName}` : 'Hit!');
     if (result.isSunk && result.shipName) {
       const shipEntry = game.enemyBoard.ships.find(s => s.ship.name === result.shipName);
       if (shipEntry) {
         shipEntry.positions.forEach(pos => updateCell(enemyGridContainer, pos[0], pos[1], 'hit', true));
         showMessage(`You sunk the enemy's ${result.shipName}!`);
       }
+    } else {
+      showMessage(result.shipName ? `Hit! ${result.shipName}` : 'Hit!');
     }
-  } else if (result.result === 'miss') {
-    updateCell(enemyGridContainer, x, y, 'miss');
+  } else {
     missSound.currentTime = 0; missSound.play();
     showMessage('Miss!');
   }
 
-  if (result.gameOver || game.enemyBoard.allShipsSunk()) { 
-    showGameOverModal(false); 
-    return; 
-  }
+  if (checkGameOver(game)) return;
 
   playerTurn = false;
   updateTurnIndicator();
