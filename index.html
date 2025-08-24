@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Battleship</title>
+<script defer src="main.js"></script></head>
+<body>
+  <!-- Header with logo -->
+  <header>
+    <img id="logo" src="assets/logo.png" alt="Battleship Logo">
+  </header>
+
+  <!-- Game title -->
+  <h1 id="game-title">BATTLESHIP</h1>
+
+  <!-- Introduction Screen -->
+  <div id="intro-screen">
+    <img id="scroll-bg" src="assets/pirateScroll.png" alt="Pirate Scroll">
+    <div id="intro-content">
+      <label for="player-name" class="intro-label">CAPTAIN NAME:</label>
+      <input type="text" id="player-name" placeholder="ENTER NAME">
+      <button id="start-btn" aria-label="Start Game"></button>
+    </div>
+  </div>
+
+  <!-- Game Screens Wrapper -->
+  <div id="game-screen">
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="hidden">
+      <div class="setup-wrapper">
+        <div class="player setup-player">
+          <img id="player1-img-setup" src="assets/player1.png" alt="Player 1">
+          <div id="player-grid" class="gameboard"></div>
+        </div>
+
+        <!-- Ship Dock -->
+        <div id="ship-dock-wrapper">
+          <h3>Drag Your Ships</h3>
+          <div id="ship-dock" class="ship-container">
+            <div class="ship" id="carrier" draggable="true" data-ship="Carrier" data-length="5">
+              <div class="ship-cell"></div><div class="ship-cell"></div>
+              <div class="ship-cell"></div><div class="ship-cell"></div>
+              <div class="ship-cell"></div>
+            </div>
+            <div class="ship" id="battleship" draggable="true" data-ship="Battleship" data-length="4">
+              <div class="ship-cell"></div><div class="ship-cell"></div>
+              <div class="ship-cell"></div><div class="ship-cell"></div>
+            </div>
+            <div class="ship" id="cruiser" draggable="true" data-ship="Cruiser" data-length="3">
+              <div class="ship-cell"></div><div class="ship-cell"></div><div class="ship-cell"></div>
+            </div>
+            <div class="ship" id="submarine" draggable="true" data-ship="Submarine" data-length="3">
+              <div class="ship-cell"></div><div class="ship-cell"></div><div class="ship-cell"></div>
+            </div>
+            <div class="ship" id="destroyer" draggable="true" data-ship="Destroyer" data-length="2">
+              <div class="ship-cell"></div><div class="ship-cell"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div id="controls">
+        <div class="orientation-wrapper">
+          <button id="orientation-btn">Rotate Ship</button>
+          <div id="rotate-indicator">Press <strong>R</strong> to rotate</div>
+        </div>
+        <button id="confirm-btn" disabled>Confirm Placement</button>
+        <button id="reset-btn">Reset Placement</button>
+      </div>
+    </div>
+
+    <!-- Battle Screen -->
+    <div id="battle-screen" class="hidden">
+      <div id="players" class="battle-players">
+        <!-- Player -->
+        <div class="player player1-battle">
+          <img id="player1-img-battle" src="assets/player1.png" alt="Player 1">
+          <div id="player-grid-battle" class="gameboard"></div>
+        </div>
+
+        <!-- Enemy -->
+        <div class="player player2-battle">
+          <img id="player2-img" src="assets/player2.png" alt="Enemy">
+          <div id="enemy-grid" class="gameboard"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="game-over-modal" class="hidden">
+    <div id="game-over-content">
+      <h2 id="game-over-title"></h2>
+      <button id="game-over-restart">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="battle-music" loop></audio>
+  <audio id="hit-sound"></audio>
+  <audio id="miss-sound"></audio>
+</body>
+</html>
