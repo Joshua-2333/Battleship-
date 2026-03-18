@@ -1,6 +1,9 @@
-# Battleship-
+# Battleship
 
 A modern, responsive web-based **Battleship game** built with **JavaScript**, **HTML**, and **CSS**. Playable on both desktop and mobile, with drag-and-drop ship placement, touch support, and dynamic visual feedback.
+
+## DEMO
+https://joshua-2333.github.io/Battleship-/
 
 ---
 ##  Features
